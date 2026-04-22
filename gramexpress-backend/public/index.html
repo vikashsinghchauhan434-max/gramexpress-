@@ -1,0 +1,2870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GramExpress — Town to Village Delivery</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+  firebase.initializeApp({
+    apiKey: "AIzaSyB_cfDAj_hkah5-xEFTTrDRBV1DE21ioA8",
+    authDomain: "gramexpress-e2b24.firebaseapp.com",
+    projectId: "gramexpress-e2b24",
+    storageBucket: "gramexpress-e2b24.firebasestorage.app",
+    messagingSenderId: "63109597753",
+    appId: "1:63109597753:web:9a2edf84e9db306b2b9be8"
+  });
+</script>
+<style>
+  :root {
+    /* Earthy Green — khet/haryali */
+    --green: #3a6b35;
+    --green-light: #eef5e8;
+    --green-mid: #5a9e4a;
+    --green-dark: #1e3d1a;
+
+    /* Mitti Brown — soil/clay warmth */
+    --brown: #8b5e3c;
+    --brown-light: #f7efe6;
+    --brown-mid: #b07d52;
+    --brown-dark: #4a2e1a;
+
+    /* Warm Amber — wheat/sarson */
+    --amber: #c8841a;
+    --amber-light: #fdf3e0;
+
+    /* Accent — desi saffron */
+    --orange: #d4691e;
+    --orange-light: #fdf0e6;
+
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --blue: #2e6da4;
+    --blue-light: #e8f1fa;
+    --purple: #6b3fa0;
+
+    /* Backgrounds — warm cream like purani deewar */
+    --bg: #f5f0e8;
+    --bg2: #ede6d8;
+    --white: #fffdf8;
+    --card: #fffdf8;
+
+    /* Text */
+    --text: #2c1f0e;
+    --text2: #6b5140;
+    --text3: #a08060;
+
+    /* Borders — warm not cold */
+    --border: #ddd0b8;
+
+    /* Sidebar — dark mitti/forest */
+    --sidebar: #1e2d18;
+    --sidebar-active: #2d4a22;
+
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  /* ======= SCREEN MANAGER ======= */
+  .screen { display: none; }
+  .screen.active { display: flex; }
+
+  /* ======= AUTH SCREEN ======= */
+  #auth-screen {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #1e2d18 0%, #2d4a22 35%, #4a2e1a 70%, #1e2d18 100%);
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-end;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+  }
+  .auth-left-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 64px;
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+  }
+  .auth-left-panel .alp-eyebrow {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: #c8a96e;
+    margin-bottom: 20px;
+  }
+  .auth-left-panel .alp-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 900;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 22px;
+    letter-spacing: -1px;
+  }
+  .auth-left-panel .alp-heading em {
+    font-style: italic;
+    color: #c8a96e;
+  }
+  .auth-left-panel .alp-sub {
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.7;
+    max-width: 400px;
+    margin-bottom: 40px;
+  }
+  .auth-left-panel .alp-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .auth-left-panel .alp-pill {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(200,169,110,0.15);
+    border-radius: 14px;
+    padding: 14px 18px;
+    max-width: 340px;
+  }
+  .alp-pill-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(200,169,110,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .alp-pill-icon svg { width: 18px; height: 18px; stroke: #c8a96e; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .alp-pill-text strong {
+    display: block;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+  }
+  .alp-pill-text span {
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+  }
+  .auth-right-panel {
+    width: 420px;
+    flex-shrink: 0;
+    background: rgba(255,253,248,0.04);
+    border-left: 1px solid rgba(200,169,110,0.12);
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 44px;
+    position: relative;
+    z-index: 1;
+    overflow-y: auto;
+  }
+  .auth-right-panel .auth-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 28px;
+    letter-spacing: -0.5px;
+    width: 100%;
+  }
+  .auth-right-panel .auth-logo span { color: #c8a96e; }
+  .auth-box {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  #auth-screen::before {
+    content: '';
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(90,158,74,0.12) 0%, transparent 70%);
+    top: -150px; right: -150px;
+    pointer-events: none;
+  }
+  #auth-screen::after {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(176,125,82,0.1) 0%, transparent 70%);
+    bottom: -120px; left: -120px;
+    pointer-events: none;
+  }
+  /* Wheat/grain texture overlay */
+  #auth-screen .auth-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='1' cy='1' r='0.5' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .auth-tagline { display: none; }
+
+  .auth-box {
+    background: rgba(255,253,248,0.06);
+    border: 1px solid rgba(200,169,110,0.2);
+    border-radius: 24px;
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 420px;
+    backdrop-filter: blur(20px);
+    position: relative; z-index: 1;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+  }
+  .auth-tabs { display: flex; gap: 6px; margin-bottom: 24px; background: rgba(0,0,0,0.25); border-radius: 12px; padding: 5px; }
+  .auth-tab { flex: 1; padding: 10px; text-align: center; color: rgba(255,255,255,0.45); font-size: 13px; font-weight: 700; border-radius: 9px; cursor: pointer; transition: all 0.2s; font-family: 'Nunito', sans-serif; }
+  .auth-tab.active { background: var(--green); color: #fff; }
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+  .auth-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+  .auth-input {
+    width: 100%;
+    padding: 13px 16px;
+    background: rgba(255,253,248,0.07);
+    border: 1.5px solid rgba(200,169,110,0.2);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Nunito', sans-serif;
+    color: #fff;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .auth-input::placeholder { color: rgba(255,255,255,0.3); }
+  .auth-input:focus { border-color: #c8a96e; box-shadow: 0 0 0 3px rgba(200,169,110,0.1); }
+  .auth-input option { background: #2d4a22; color: #fff; }
+  .auth-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--green), var(--green-mid));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    margin-top: 6px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(58,107,53,0.4);
+    letter-spacing: 0.3px;
+  }
+  .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(58,107,53,0.5); }
+  .auth-error { background: rgba(192,57,43,0.2); border: 1px solid rgba(192,57,43,0.4); border-radius: 10px; padding: 10px 14px; color: #f5a49b; font-size: 13px; margin-bottom: 14px; display: none; }
+  .auth-error.show { display: block; }
+  .auth-hint { font-size: 12px; color: rgba(255,255,255,0.35); text-align: center; margin-top: 14px; }
+  .auth-hint span { color: #c8a96e; cursor: pointer; }
+
+  /* ===== REAL GOOGLE BUTTON ===== */
+  .google-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: #fff;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .google-btn:hover { background: #f8f9fa; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+  .google-logo {
+    width: 20px; height: 20px; flex-shrink: 0;
+  }
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 16px 0;
+    color: rgba(255,255,255,0.3);
+    font-size: 12px;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.15);
+  }
+
+  /* ======= PENDING / BLOCKED SCREENS ======= */
+  #pending-screen {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #1e2d18 0%, #2d4a22 35%, #4a2e1a 70%, #1e2d18 100%);
+    flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 20px;
+  }
+  #blocked-screen {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #2d0f0f 0%, #4a1a1a 40%, #2d0f0f 100%);
+    flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+  }
+  .pending-box { background: rgba(255,253,248,0.06); border: 1px solid rgba(200,169,110,0.2); border-radius: 24px; padding: 48px 52px; text-align: center; backdrop-filter: blur(20px); max-width: 460px; width: 100%; }
+  .pending-icon { font-size: 56px; margin-bottom: 18px; }
+  .pending-box h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .pending-box p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7; font-family: 'Nunito', sans-serif; }
+  .pending-logout { margin-top: 24px; background: transparent; border: 1.5px solid rgba(200,169,110,0.3); color: rgba(255,255,255,0.5); padding: 10px 24px; border-radius: 10px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 13px; transition: all 0.2s; }
+  .pending-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* ======= APP SHELL ======= */
+  #app-screen { min-height: 100vh; }
+  .sidebar {
+    width: 260px; min-height: 100vh; background: var(--sidebar);
+    display: flex; flex-direction: column;
+    position: fixed; left: 0; top: 0; z-index: 100;
+    transition: transform 0.3s ease;
+    border-right: 1px solid rgba(200,169,110,0.1);
+  }
+  .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(200,169,110,0.1); }
+  .sidebar-logo h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+  .sidebar-logo h2 span { color: #c8a96e; }
+  .sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Nunito', sans-serif; }
+  .sidebar-user { margin: 16px 24px 6px; background: rgba(200,169,110,0.08); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(200,169,110,0.1); }
+  .su-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 13px; flex-shrink: 0; overflow: hidden; }
+  .su-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .su-avatar.admin-av { background: var(--purple); }
+  .su-avatar.vendor-av { background: var(--brown); }
+  .su-info { overflow: hidden; }
+  .su-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Nunito', sans-serif; }
+  .su-role { font-size: 11px; color: rgba(255,255,255,0.35); font-family: 'Nunito', sans-serif; }
+  .sidebar-role-badge { margin: 8px 24px 10px; padding: 6px 14px; border-radius: 50px; font-size: 11px; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Nunito', sans-serif; }
+  .badge-customer { background: rgba(90,158,74,0.2); color: #8fce7a; }
+  .badge-vendor { background: rgba(176,125,82,0.2); color: #d4a574; }
+  .badge-admin { background: rgba(107,63,160,0.2); color: #b39ee0; }
+  .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer; color: rgba(255,255,255,0.45); font-size: 14px; font-weight: 600; border-left: 3px solid transparent; transition: all 0.2s; font-family: 'Nunito', sans-serif; }
+  .nav-item:hover { color: #fff; background: rgba(200,169,110,0.06); }
+  .nav-item.active { color: #c8a96e; background: var(--sidebar-active); border-left-color: #c8a96e; }
+  .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+  .sidebar-bottom { padding: 20px 24px; border-top: 1px solid rgba(200,169,110,0.1); }
+  .logout-btn { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.35); cursor: pointer; font-size: 13px; transition: color 0.2s; padding: 8px 0; font-family: 'Nunito', sans-serif; font-weight: 600; }
+  .logout-btn:hover { color: var(--red); }
+  .main { margin-left: 260px; flex: 1; padding: 28px 32px; min-height: 100vh; padding-bottom: 100px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+  .page-header h1 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 800; color: var(--text); }
+
+  /* ===== SEARCH ===== */
+  .search-container {
+    position: sticky; top: 0;
+    background: var(--bg);
+    z-index: 50;
+    margin: -28px -32px 16px;
+    padding: 14px 32px;
+  }
+  .search-wrapper {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 16px; padding: 12px 20px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 12px rgba(58,107,53,0.06);
+  }
+  .search-wrapper:focus-within { border-color: var(--green); box-shadow: 0 0 0 4px rgba(58,107,53,0.08); }
+  .search-wrapper input { flex: 1; border: none; outline: none; font-size: 15px; font-family: 'Nunito', sans-serif; background: transparent; color: var(--text); font-weight: 500; }
+  .search-icon { color: var(--text3); font-size: 18px; cursor: pointer; }
+  .voice-search-btn { color: var(--text3); font-size: 16px; cursor: pointer; transition: color 0.2s; background: none; border: none; padding: 8px; border-radius: 50%; }
+  .voice-search-btn:hover { background: var(--green-light); color: var(--green); }
+  .voice-search-btn.listening { color: var(--red); animation: pulse 1s infinite; }
+
+  /* Hero Banner — village field feel */
+  .hero-banner {
+    background: linear-gradient(135deg, #1e2d18 0%, #2d4a22 50%, #4a3520 100%);
+    border-radius: 20px; padding: 32px 36px;
+    margin-bottom: 24px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid rgba(200,169,110,0.15);
+    box-shadow: 0 8px 32px rgba(30,45,24,0.2);
+  }
+  .hero-banner::before {
+    content: ''; position: absolute;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,169,110,0.12) 0%, transparent 70%);
+    right: -60px; top: -80px;
+  }
+  .hero-banner::after {
+    content: ''; position: absolute;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(90,158,74,0.1) 0%, transparent 70%);
+    left: 30%; bottom: -60px;
+  }
+  .hero-text h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 6px; line-height: 1.3; }
+  .hero-text p { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 16px; font-family: 'Nunito', sans-serif; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(200,169,110,0.2); border: 1px solid rgba(200,169,110,0.4); color: #c8a96e; padding: 7px 16px; border-radius: 50px; font-size: 12px; font-weight: 800; font-family: 'Nunito', sans-serif; letter-spacing: 0.3px; }
+  .hero-emoji { font-size: 80px; position: relative; z-index: 1; }
+
+  /* Category Pills */
+  .category-scroll {
+    display: flex; gap: 10px; overflow-x: auto; padding: 0 0 16px; scrollbar-width: none; margin-bottom: 8px;
+  }
+  .category-scroll::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 50px; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+    font-size: 13px; font-weight: 700; color: var(--text2);
+    flex-shrink: 0; font-family: 'Nunito', sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .cat-pill:hover { border-color: var(--green-mid); color: var(--green); transform: translateY(-2px); box-shadow: 0 4px 14px rgba(58,107,53,0.12); }
+  .cat-pill.active { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(58,107,53,0.3); }
+  .cat-pill .cat-icon { font-size: 20px; }
+
+  /* Subcategory chips */
+  .subcat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .subcat-chip {
+    padding: 6px 14px; background: var(--white);
+    border: 1.5px solid var(--border); border-radius: 50px;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: 'Nunito', sans-serif; color: var(--text2);
+  }
+  .subcat-chip:hover, .subcat-chip.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* Section headers */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--text); }
+  .see-all-btn { font-size: 13px; color: var(--green); font-weight: 700; cursor: pointer; border: none; background: none; font-family: 'Nunito', sans-serif; }
+
+  /* Sort row */
+  .sort-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sort-select { padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-family: 'Nunito', sans-serif; background: var(--white); cursor: pointer; outline: none; color: var(--text); font-weight: 600; }
+  .sort-select:focus { border-color: var(--green); }
+
+  /* Product Grid */
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+
+  .product-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+    transition: all 0.25s;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(58,107,53,0.05);
+  }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(58,107,53,0.15); border-color: var(--green-mid); }
+  .product-img {
+    height: 140px;
+    background: linear-gradient(135deg, #eef5e8, #f7efe6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 56px; position: relative; overflow: hidden;
+  }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; }
+  .product-badge {
+    position: absolute; top: 8px; left: 8px;
+    background: var(--green); color: #fff;
+    padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+  }
+  .product-badge.out { background: var(--red); }
+  .product-fav {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,253,248,0.92); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: var(--red); transition: all 0.2s;
+  }
+  .product-fav:hover { transform: scale(1.1); }
+  .product-info { padding: 12px; }
+  .product-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; line-height: 1.4; font-family: 'Nunito', sans-serif; }
+  .product-unit { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-family: 'Nunito', sans-serif; }
+  .product-vendor { font-size: 11px; color: var(--green); font-weight: 600; margin-bottom: 8px; font-family: 'Nunito', sans-serif; }
+  .product-price-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .product-price { font-size: 16px; font-weight: 800; color: var(--text); font-family: 'Nunito', sans-serif; }
+  .product-mrp { font-size: 11px; color: var(--text3); text-decoration: line-through; }
+  .add-btn {
+    background: linear-gradient(135deg, var(--green), var(--green-mid));
+    color: #fff;
+    border: none; border-radius: 8px; padding: 7px 12px;
+    font-size: 12px; font-weight: 800; cursor: pointer;
+    font-family: 'Nunito', sans-serif; transition: all 0.2s; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(58,107,53,0.3);
+  }
+  .add-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(58,107,53,0.4); }
+  .qty-selector { display: flex; align-items: center; gap: 6px; }
+  .qty-btn { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid var(--green); background: #fff; color: var(--green); cursor: pointer; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .qty-btn:hover { background: var(--green); color: #fff; }
+  .qty-display { font-size: 14px; font-weight: 800; min-width: 20px; text-align: center; font-family: 'Nunito', sans-serif; }
+
+  /* ===== STATS ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--white); border-radius: 16px; padding: 20px; border: 1.5px solid var(--border); box-shadow: 0 2px 10px rgba(58,107,53,0.05); }
+  .stat-icon { font-size: 28px; margin-bottom: 8px; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; margin-bottom: 4px; color: var(--text); }
+  .stat-label { font-size: 12px; color: var(--text2); font-weight: 600; font-family: 'Nunito', sans-serif; }
+
+  /* ===== CARDS ===== */
+  .card { background: var(--white); border-radius: 16px; padding: 24px; border: 1.5px solid var(--border); margin-bottom: 20px; box-shadow: 0 2px 10px rgba(58,107,53,0.04); }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--text); }
+  .info-box { background: var(--green-light); border: 1px solid rgba(58,107,53,0.2); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: var(--green); margin-bottom: 20px; font-family: 'Nunito', sans-serif; font-weight: 600; }
+
+  /* ===== FORM ELEMENTS ===== */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--text2); margin-bottom: 6px; font-family: 'Nunito', sans-serif; }
+  .form-input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: 'Nunito', sans-serif; outline: none; transition: all 0.2s; background: var(--white); color: var(--text); font-weight: 500; }
+  .form-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(58,107,53,0.08); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ===== BUTTONS ===== */
+  .btn-primary { padding: 10px 20px; background: linear-gradient(135deg, var(--green), var(--green-mid)); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 700; font-family: 'Nunito', sans-serif; transition: all 0.2s; box-shadow: 0 3px 10px rgba(58,107,53,0.25); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(58,107,53,0.35); }
+  .btn-danger { padding: 7px 14px; background: var(--red-light); color: var(--red); border: 1px solid rgba(192,57,43,0.2); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: 'Nunito', sans-serif; transition: all 0.2s; }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-block { padding: 7px 14px; background: var(--orange-light); color: var(--orange); border: 1px solid rgba(212,105,30,0.2); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: 'Nunito', sans-serif; }
+  .btn-unblock { padding: 7px 14px; background: var(--green-light); color: var(--green); border: 1px solid rgba(58,107,53,0.2); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: 'Nunito', sans-serif; }
+  .btn-approve { padding: 8px 16px; background: linear-gradient(135deg, var(--green), var(--green-mid)); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'Nunito', sans-serif; transition: all 0.2s; }
+  .btn-approve:hover { box-shadow: 0 4px 12px rgba(58,107,53,0.3); }
+
+  /* ===== BADGES ===== */
+  .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; font-family: 'Nunito', sans-serif; }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-orange { background: var(--orange-light); color: var(--orange); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+  .badge-blue { background: var(--blue-light); color: var(--blue); }
+  .badge-gray { background: var(--bg2); color: var(--text2); }
+
+  /* ===== TABLE ===== */
+  .table-responsive { overflow-x: auto; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: 'Nunito', sans-serif; }
+  .data-table th { background: var(--bg); padding: 10px 14px; text-align: left; font-weight: 700; color: var(--text2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .data-table tr:hover td { background: var(--bg); }
+  .user-row-blocked td { opacity: 0.6; }
+
+  /* ===== ORDER CARD ===== */
+  .order-card { border: 1.5px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; background: var(--white); box-shadow: 0 2px 8px rgba(58,107,53,0.04); }
+  .order-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .order-id { font-weight: 800; font-size: 14px; font-family: 'Nunito', sans-serif; color: var(--text); }
+  .order-date { font-size: 12px; color: var(--text3); font-family: 'Nunito', sans-serif; }
+  .order-items { font-size: 13px; color: var(--text2); margin-bottom: 10px; font-family: 'Nunito', sans-serif; }
+  .order-footer { display: flex; align-items: center; justify-content: space-between; }
+  .order-total { font-weight: 800; font-size: 15px; color: var(--green); font-family: 'Nunito', sans-serif; }
+
+  /* ===== BILLING BREAKDOWN ===== */
+  .billing-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border); font-family: 'Nunito', sans-serif; }
+  .billing-row:last-child { border-bottom: none; }
+  .billing-total { font-size: 18px; font-weight: 800; color: var(--green); }
+  .discount-row { color: var(--green); }
+  .coupon-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .coupon-input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-family: 'Nunito', sans-serif; outline: none; background: var(--white); color: var(--text); }
+  .coupon-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(58,107,53,0.08); }
+  .apply-btn { padding: 10px 18px; background: linear-gradient(135deg, var(--green), var(--green-mid)); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'Nunito', sans-serif; white-space: nowrap; }
+
+  /* ===== STAR RATING ===== */
+  .star-rating { display: flex; gap: 6px; margin-bottom: 12px; }
+  .star { font-size: 28px; cursor: pointer; color: var(--border); transition: color 0.15s; }
+  .star.active { color: var(--amber); }
+
+  /* ===== IMAGE UPLOAD ===== */
+  .image-upload { border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg); }
+  .image-upload:hover { border-color: var(--green); background: var(--green-light); }
+  .image-upload i { font-size: 28px; color: var(--text3); margin-bottom: 8px; display: block; }
+  .image-upload p { font-size: 13px; color: var(--text3); font-family: 'Nunito', sans-serif; }
+  .image-upload input { display: none; }
+  .image-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-top: 10px; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(30,20,10,0.6); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: 20px; padding: 28px; width: 100%; max-width: 500px; max-height: 92vh; overflow-y: auto; position: relative; border: 1px solid var(--border); box-shadow: 0 24px 64px rgba(30,20,10,0.2); }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; color: var(--text); }
+  .close-btn { cursor: pointer; color: var(--text3); font-size: 18px; }
+  .close-btn:hover { color: var(--text); }
+
+  /* ===== VENDOR PRODUCT UPLOAD ===== */
+  .upload-step { margin-bottom: 20px; }
+  .upload-step-title { font-size: 14px; font-weight: 800; color: var(--green); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-family: 'Nunito', sans-serif; }
+  .step-num { width: 22px; height: 22px; background: var(--green); color: #fff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .photo-slot { aspect-ratio: 1; border: 2px dashed var(--border); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background: var(--bg); transition: all 0.2s; position: relative; }
+  .photo-slot:hover { border-color: var(--green); background: var(--green-light); }
+  .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-slot .add-photo-icon { font-size: 24px; color: var(--text3); }
+  .photo-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(192,57,43,0.9); color: #fff; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
+  .photo-slot:hover .photo-remove { display: flex; }
+
+  /* ===== ADMIN DELIVERY SETTINGS ===== */
+  .delivery-settings-card { background: linear-gradient(135deg, #1e2d18, #2d4a22, #4a3520); border-radius: 16px; padding: 24px; color: #fff; margin-bottom: 20px; border: 1px solid rgba(200,169,110,0.15); }
+  .delivery-settings-card h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .delivery-settings-card p { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 20px; font-family: 'Nunito', sans-serif; }
+  .delivery-setting-row { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+  .delivery-setting-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.8); flex: 1; min-width: 200px; font-family: 'Nunito', sans-serif; }
+  .delivery-input { padding: 10px 14px; background: rgba(255,255,255,0.1); border: 1.5px solid rgba(200,169,110,0.2); border-radius: 10px; color: #fff; font-size: 14px; font-family: 'Nunito', sans-serif; outline: none; width: 120px; }
+  .delivery-input:focus { border-color: #c8a96e; }
+  .save-delivery-btn { padding: 10px 20px; background: linear-gradient(135deg, var(--green), var(--green-mid)); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 800; font-family: 'Nunito', sans-serif; box-shadow: 0 3px 10px rgba(58,107,53,0.3); }
+
+  /* ===== CART FLOAT ===== */
+  .cart-float {
+    position: fixed; bottom: 24px; right: 24px; z-index: 150;
+    background: linear-gradient(135deg, var(--green), var(--green-mid));
+    color: #fff;
+    padding: 14px 22px; border-radius: 50px;
+    display: none; align-items: center; gap: 10px;
+    cursor: pointer; font-weight: 800; font-size: 15px;
+    font-family: 'Nunito', sans-serif;
+    box-shadow: 0 8px 28px rgba(58,107,53,0.45);
+    transition: all 0.2s;
+    border: 1px solid rgba(200,169,110,0.2);
+  }
+  .cart-float:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(58,107,53,0.55); }
+  .cart-count { background: #fff; color: var(--green); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+
+  /* ===== TOAST ===== */
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--brown-dark); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; font-family: 'Nunito', sans-serif; border: 1px solid rgba(200,169,110,0.2); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== ADDRESS SECTION ===== */
+  .address-section { background: var(--bg); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+  .address-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .address-header h4 { font-size: 14px; font-weight: 700; font-family: 'Nunito', sans-serif; }
+  .location-btn { padding: 8px 14px; background: var(--green-light); color: var(--green); border: 1.5px solid rgba(58,107,53,0.3); border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700; font-family: 'Nunito', sans-serif; display: flex; align-items: center; gap: 6px; }
+  .address-display { font-size: 12px; color: var(--text2); background: var(--white); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--green); display: flex; align-items: center; gap: 8px; margin-top: 8px; font-family: 'Nunito', sans-serif; }
+
+  /* ===== MAP CONTAINER ===== */
+  .map-container { width: 100%; height: 180px; border-radius: 12px; overflow: hidden; margin-top: 10px; background: var(--bg); }
+  .map-container iframe { width: 100%; height: 100%; border: none; }
+
+  /* ===== FEEDBACK CARD ===== */
+  .feedback-card { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: var(--white); font-family: 'Nunito', sans-serif; }
+  .fb-stars { color: var(--amber); font-size: 14px; margin-bottom: 4px; }
+  .fb-text { font-size: 13px; color: var(--text); margin-bottom: 6px; }
+  .fb-meta { font-size: 11px; color: var(--text3); }
+
+  /* ===== PENDING VENDOR CARD ===== */
+  .pending-vendor-card { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 16px; border: 1.5px solid var(--border); border-radius: 12px; margin-bottom: 12px; flex-wrap: wrap; background: var(--white); }
+  .vendor-info h4 { font-size: 15px; font-weight: 800; margin-bottom: 4px; font-family: 'Nunito', sans-serif; }
+  .vendor-info p { font-size: 12px; color: var(--text2); margin-bottom: 2px; font-family: 'Nunito', sans-serif; }
+  .action-btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state { text-align: center; padding: 48px 24px; }
+  .es-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { color: var(--text2); font-size: 14px; font-family: 'Nunito', sans-serif; font-weight: 600; }
+
+  /* ===== MOBILE NAV ===== */
+  .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--border); padding: 8px 0; z-index: 100; box-shadow: 0 -4px 20px rgba(58,107,53,0.08); }
+  .mobile-nav-items { display: flex; justify-content: space-around; align-items: center; }
+  .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; cursor: pointer; color: var(--text2); transition: all 0.2s; border-radius: 12px; font-family: 'Nunito', sans-serif; font-weight: 600; }
+  .mobile-nav-item.active { color: var(--green); background: var(--green-light); }
+  .mobile-nav-item i { font-size: 20px; }
+  .mobile-nav-item span { font-size: 10px; font-weight: 600; }
+
+  /* ===== HAMBURGER ===== */
+  .hamburger { display: none; position: fixed; top: 16px; left: 16px; z-index: 101; width: 44px; height: 44px; background: var(--green); border-radius: 12px; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 20px; box-shadow: 0 4px 15px rgba(26,122,74,0.3); }
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+  .sidebar-overlay.show { display: block; }
+
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+  /* ===== MOBILE RESPONSIVE ===== */
+  @media (max-width: 860px) {
+    #auth-screen { flex-direction: column; justify-content: flex-start; overflow-y: auto; }
+    .auth-left-panel { display: none; }
+    .auth-right-panel { width: 100%; min-height: 100vh; border-left: none; padding: 48px 28px; justify-content: center; }
+  }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-260px); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 12px; padding-top: 70px; padding-bottom: 90px; }
+    .hamburger { display: flex; }
+    .mobile-nav { display: block; }
+    .auth-box { padding: 24px 18px; }
+    .form-row { grid-template-columns: 1fr; }
+    .hero-banner { padding: 18px 16px; border-radius: 14px; }
+    .hero-text h2 { font-size: 17px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .product-img { height: 120px; }
+    .product-card { border-radius: 12px; }
+    .cart-float { bottom: 80px; right: 16px; padding: 12px 18px; font-size: 14px; }
+    .search-container { margin: -12px -12px 12px; padding: 12px 14px; border-radius: 0; }
+    .category-pills { gap: 6px; padding: 4px 0; }
+    .category-pill { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+  }
+  @media (max-width: 480px) {
+    .products-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .product-img { height: 110px; font-size: 42px; }
+    .product-info { padding: 8px 10px; }
+    .product-name { font-size: 12px; line-height: 1.3; font-weight: 700; }
+    .product-unit { font-size: 10px; }
+    .product-price { font-size: 14px; font-weight: 800; }
+    .product-mrp { font-size: 10px; }
+    .add-btn { width: 30px; height: 30px; font-size: 18px; border-radius: 8px; }
+    .auth-logo { font-size: 36px; }
+    .main { padding: 8px; padding-top: 68px; padding-bottom: 86px; }
+    .hero-banner { padding: 14px 14px; }
+    .hero-text h2 { font-size: 15px; }
+    .hero-text p { font-size: 11px; }
+    .modal { padding: 16px; border-radius: 16px; max-width: 95vw; }
+    .category-pills { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; overflow: visible; }
+    .category-pill { padding: 6px 4px; font-size: 10px; text-align: center; white-space: normal; border-radius: 10px; }
+    .search-bar input { font-size: 13px; }
+    .product-badge { font-size: 9px; padding: 2px 6px; }
+  }
+
+  /* ===== PROFILE PAGES ===== */
+  .profile-hero {
+    background: linear-gradient(135deg, var(--sidebar) 0%, #1a4a2e 100%);
+    border-radius: 20px;
+    padding: 32px 28px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .profile-hero::before {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(46,168,106,0.15) 0%, transparent 70%);
+    top: -80px; right: -80px;
+    pointer-events: none;
+  }
+  .profile-avatar-big {
+    width: 88px; height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green-mid), var(--green));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 32px; font-weight: 800;
+    font-family: 'Syne', sans-serif;
+    flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,0.2);
+    overflow: hidden;
+    position: relative; z-index: 1;
+  }
+  .profile-avatar-big img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-avatar-big.vendor-av { background: linear-gradient(135deg, #f97316, #ea580c); }
+  .profile-avatar-big.admin-av  { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+  .profile-hero-info { flex: 1; position: relative; z-index: 1; }
+  .profile-hero-name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .profile-hero-sub  { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 10px; }
+  .profile-hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .profile-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px; color: rgba(255,255,255,0.8);
+  }
+
+  .profile-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .profile-stat-box {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 18px 14px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .profile-stat-val { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .profile-stat-lbl { font-size: 12px; color: var(--text2); }
+
+  .profile-section {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .profile-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .profile-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 600px) {
+    .profile-info-grid { grid-template-columns: 1fr; }
+    .profile-stats-row { grid-template-columns: repeat(3,1fr); gap:10px; }
+    .profile-hero { padding: 22px 16px; gap: 16px; }
+    .profile-avatar-big { width: 64px; height: 64px; font-size: 24px; }
+    .profile-hero-name { font-size: 18px; }
+  }
+  .profile-info-item {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 13px 15px;
+  }
+  .profile-info-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .profile-info-value { font-size: 14px; font-weight: 600; color: var(--text); }
+  .profile-edit-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    color: #fff; padding: 8px 18px;
+    border-radius: 10px; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .profile-edit-btn:hover { background: rgba(255,255,255,0.2); }
+
+  .vendor-product-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .vendor-product-item:last-child { border-bottom: none; }
+  .vp-thumb {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .vp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .vp-info { flex: 1; min-width: 0; }
+  .vp-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .vp-meta { font-size: 12px; color: var(--text2); }
+  .vp-price { font-size: 15px; font-weight: 700; color: var(--green); flex-shrink: 0; }
+
+  .mobile-logout-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
+    background: rgba(239,68,68,0.1);
+    border: 1.5px solid rgba(239,68,68,0.25);
+    border-radius: 12px;
+    color: var(--red); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+    margin-top: 20px;
+  }
+  .mobile-logout-btn:hover { background: rgba(239,68,68,0.18); }
+
+  /* ===== OTP STYLES ===== */
+  .otp-step { display: none; }
+  .otp-step.active { display: block; }
+  .otp-boxes { display: flex; gap: 10px; justify-content: center; margin: 16px 0; }
+  .otp-box {
+    width: 48px; height: 54px;
+    background: rgba(255,253,248,0.07);
+    border: 1.5px solid rgba(200,169,110,0.25);
+    border-radius: 12px;
+    font-size: 22px; font-weight: 800;
+    color: #fff; text-align: center;
+    font-family: 'Nunito', sans-serif;
+    outline: none; transition: all 0.2s;
+    caret-color: #c8a96e;
+  }
+  .otp-box:focus { border-color: #c8a96e; box-shadow: 0 0 0 3px rgba(200,169,110,0.15); background: rgba(255,253,248,0.1); }
+  .otp-timer { text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 8px; font-family: 'Nunito', sans-serif; }
+  .otp-timer span { color: #c8a96e; font-weight: 700; }
+  .otp-resend { text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 8px; font-family: 'Nunito', sans-serif; }
+  .otp-resend button { background: none; border: none; color: #c8a96e; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 12px; }
+  .otp-resend button:disabled { color: rgba(255,255,255,0.3); cursor: not-allowed; }
+  .otp-phone-display { text-align: center; font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 4px; font-family: 'Nunito', sans-serif; }
+  .otp-phone-display strong { color: #fff; }
+  .otp-back { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 12px; cursor: pointer; font-family: 'Nunito', sans-serif; padding: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 4px; }
+  .otp-back:hover { color: rgba(255,255,255,0.7); }
+  .forgot-link { text-align: center; margin-top: 10px; }
+  .forgot-link button { background: none; border: none; color: rgba(200,169,110,0.8); font-size: 12px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 600; }
+  .forgot-link button:hover { color: #c8a96e; }
+
+</style>
+</head>
+<body>
+
+<!-- Hamburger -->
+<div class="hamburger" id="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- ============================================================ AUTH SCREEN ============================================================ -->
+<div id="auth-screen" class="screen active">
+
+  <!-- LEFT PANEL — brand story -->
+  <div class="auth-left-panel">
+    <div class="alp-eyebrow">Farm to Doorstep</div>
+    <h1 class="alp-heading">The freshest produce,<br>from <em>khet</em> to<br>your kitchen.</h1>
+    <p class="alp-sub">GramExpress connects rural farmers and local vendors directly with households — no middlemen, no delay, no compromise on quality.</p>
+    <div class="alp-pills">
+      <div class="alp-pill">
+        <div class="alp-pill-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" stroke="none" fill="#c8a96e"/><circle cx="12" cy="12" r="10" stroke="#c8a96e" fill="none"/><path d="M5 13l4 4L19 7" stroke="#c8a96e" fill="none"/></svg>
+        </div>
+        <div class="alp-pill-text">
+          <strong>Verified Local Vendors</strong>
+          <span>Every seller is reviewed and approved by our team</span>
+        </div>
+      </div>
+      <div class="alp-pill">
+        <div class="alp-pill-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+        </div>
+        <div class="alp-pill-text">
+          <strong>Express Delivery</strong>
+          <span>Same-day delivery to your village or town</span>
+        </div>
+      </div>
+      <div class="alp-pill">
+        <div class="alp-pill-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="alp-pill-text">
+          <strong>Safe & Transparent</strong>
+          <span>See prices, track orders, rate your experience</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL — auth forms -->
+  <div class="auth-right-panel">
+    <div class="auth-logo">Gram<span>Express</span></div>
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-form active" id="login-form">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-error" id="login-error"></div>
+
+      <!-- Google Sign In with real logo -->
+      <button class="google-btn" onclick="handleGoogleSignIn()">
+        <svg class="google-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="auth-divider">or login with email</div>
+      <input class="auth-input" id="login-email" type="email" placeholder="Email address">
+      <input class="auth-input" id="login-password" type="password" placeholder="Password">
+      <button class="auth-btn" onclick="handleLogin()">Sign In →</button>
+      <div class="forgot-link"><button onclick="openForgotPassword()">Forgot Password?</button></div>
+    </div>
+
+    <!-- REGISTER FORM — Direct (no OTP) -->
+    <div class="auth-form" id="register-form">
+      <div class="auth-title">Create Account</div>
+      <div class="auth-error" id="reg-error"></div>
+
+      <button class="google-btn" onclick="handleGoogleSignIn()">
+        <svg class="google-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <div class="auth-divider">or register with email</div>
+      <input class="auth-input" id="reg-name" placeholder="Your full name">
+      <input class="auth-input" id="reg-email" type="email" placeholder="Email address">
+      <input class="auth-input" id="reg-password" type="password" placeholder="Create password (min 6 chars)">
+      <select class="auth-input" id="reg-role" onchange="onRoleChange(this.value)">
+        <option value="">— Select your role —</option>
+        <option value="customer">Customer — I want to buy products</option>
+        <option value="vendor">Vendor — I want to sell products</option>
+      </select>
+      <div id="customer-extra" style="display:none;">
+        <input class="auth-input" id="reg-cphone" type="tel" placeholder="Phone number (10 digits)">
+        <input class="auth-input" id="reg-address" placeholder="Your delivery address (optional)">
+      </div>
+      <div id="vendor-extra" style="display:none;">
+        <input class="auth-input" id="reg-phone" type="tel" placeholder="Phone number (10 digits)">
+        <input class="auth-input" id="reg-store" placeholder="Store / Shop name">
+        <input class="auth-input" id="reg-location" placeholder="Village / Town name">
+        <select class="auth-input" id="reg-vcat">
+          <option>Vegetables & Fruits</option>
+          <option>Grains & Pulses</option>
+          <option>Dairy Products</option>
+          <option>Snacks & FMCG</option>
+          <option>Electronics</option>
+          <option>Clothing</option>
+          <option>Mixed</option>
+        </select>
+      </div>
+
+      <button class="auth-btn" onclick="handleRegister()">Create Account &#8594;</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ============================================================ FORGOT PASSWORD MODAL ============================================================ -->
+<div class="modal-overlay" id="forgot-modal">
+  <div class="modal" style="background:linear-gradient(160deg,#1e2d18,#2d4a22,#4a3520);border:1px solid rgba(200,169,110,0.2);">
+    <div class="modal-title" style="color:#fff;font-family:'Playfair Display',serif;">Reset Password <span class="close-btn" style="color:rgba(255,255,255,0.4);" onclick="closeForgotPassword()">&#10005;</span></div>
+    <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px;font-family:'Nunito',sans-serif;">Enter your registered email address. We will update your password directly.</p>
+    <div class="auth-error" id="fp-error"></div>
+    <input class="auth-input" id="fp-email" type="email" placeholder="Registered email address">
+    <input class="auth-input" id="fp-new-password" type="password" placeholder="New password (min 6 chars)" style="margin-top:10px;">
+    <input class="auth-input" id="fp-confirm-password" type="password" placeholder="Confirm new password">
+    <button class="auth-btn" onclick="resetPasswordDirect()" style="margin-top:8px;">Update Password &#8594;</button>
+  </div>
+</div>
+
+
+<!-- ============================================================ PENDING SCREEN ============================================================ -->
+<div id="pending-screen" class="screen">
+  <div class="pending-box">
+    <div class="pending-icon">⏳</div>
+    <h2>Approval Pending</h2>
+    <p>Your vendor account has been submitted for review. The admin will approve or reject your application.</p>
+    <br><p style="color:rgba(255,255,255,0.3);font-size:12px;" id="pending-email-display"></p>
+    <button class="pending-logout" onclick="doLogout()">← Back to Login</button>
+  </div>
+</div>
+
+<!-- ============================================================ BLOCKED SCREEN ============================================================ -->
+<div id="blocked-screen" class="screen">
+  <div class="pending-box" style="border-color:rgba(239,68,68,0.3);">
+    <div class="pending-icon">🚫</div>
+    <h2 style="color:#fca5a5;">Account Blocked</h2>
+    <p>Your account has been blocked by the administrator. Please contact support.</p>
+    <button class="pending-logout" onclick="doLogout()">← Back to Login</button>
+  </div>
+</div>
+
+<!-- ============================================================ APP SHELL ============================================================ -->
+<div id="app-screen" class="screen">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h2>Gram<span>Express</span></h2>
+      <p id="sidebar-panel-text">Dashboard</p>
+    </div>
+    <div class="sidebar-user">
+      <div class="su-avatar" id="su-avatar">?</div>
+      <div class="su-info">
+        <div class="su-name" id="su-name">—</div>
+        <div class="su-role" id="su-role">—</div>
+      </div>
+    </div>
+    <div class="sidebar-role-badge" id="role-badge">—</div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-bottom">
+      <div class="logout-btn" onclick="doLogout()"><span>&#x2192;</span><span>Logout</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="main-content">
+
+    <!-- ===== CUSTOMER: HOME/SHOP ===== -->
+    <div id="page-c-home" class="page">
+      <div class="search-container">
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" placeholder="Search vegetables, fruits, dairy..." id="search-input" oninput="filterProducts()">
+          <button class="voice-search-btn" id="voice-btn" onclick="startVoiceSearch()">
+            <i class="fas fa-microphone"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-banner">
+        <div class="hero-text">
+          <h2>Khet ki Tazgi,<br>Ghar ke Darwaze Tak</h2>
+          <p>Sabziyan, Anaaj & Roz ki Zaroorat — Seedha Gaon Se</p>
+          <div class="hero-badge">Express Delivery Available</div>
+        </div>
+        
+      </div>
+
+      <!-- Category Pills -->
+      <div class="category-scroll" id="category-scroll"></div>
+
+      <!-- Subcategory chips -->
+      <div class="subcat-row" id="subcat-row"></div>
+
+      <!-- Sort -->
+      <div class="sort-row">
+        <select class="sort-select" id="sort-select" onchange="sortProducts()">
+          <option value="default">Sort: Default</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="name-az">Name: A to Z</option>
+          <option value="newest">Newest First</option>
+        </select>
+        <div id="active-filters"></div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title" id="products-section-title">All Products</div>
+      </div>
+      <div class="products-grid" id="products-grid"></div>
+    </div>
+
+    <!-- ===== CUSTOMER: ORDERS ===== -->
+    <div id="page-c-orders" class="page">
+      <div class="page-header"><h1>My Orders</h1></div>
+      <div id="my-orders-list"></div>
+    </div>
+
+    <!-- ===== CUSTOMER: FEEDBACK ===== -->
+    <div id="page-c-feedback" class="page">
+      <div class="page-header"><h1>Give Feedback ⭐</h1></div>
+      <div class="card">
+        <div class="card-title">Share Your Experience</div>
+        <div class="form-group">
+          <label class="form-label">Rating</label>
+          <div class="star-rating" id="star-rating">
+            <span class="star" data-val="1" onclick="setStar(1)">★</span>
+            <span class="star" data-val="2" onclick="setStar(2)">★</span>
+            <span class="star" data-val="3" onclick="setStar(3)">★</span>
+            <span class="star" data-val="4" onclick="setStar(4)">★</span>
+            <span class="star" data-val="5" onclick="setStar(5)">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Select Vendor (optional)</label>
+          <select class="form-input" id="fb-vendor"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Review</label>
+          <textarea class="form-input" id="fb-text" rows="3" placeholder="Tell us about your experience..."></textarea>
+        </div>
+        <button class="btn-primary" onclick="submitFeedback()">Submit Feedback</button>
+      </div>
+      <div id="feedback-list"></div>
+    </div>
+
+    <!-- ===== CUSTOMER: PROFILE ===== -->
+    <div id="page-c-profile" class="page">
+      <div class="page-header"><h1>My Profile</h1></div>
+      <div id="customer-profile-info"></div>
+    </div>
+
+    <!-- ===== VENDOR: DASHBOARD ===== -->
+    <div id="page-v-home" class="page">
+      <div class="page-header">
+        <h1>Vendor Dashboard</h1>
+        <div id="vendor-status-banner"></div>
+      </div>
+      <div class="stats-grid" id="vendor-stats"></div>
+      <div class="card">
+        <div class="card-title">My Products <button class="btn-primary" onclick="openAddProduct()" style="font-size:13px;padding:8px 16px;">+ Add Product</button></div>
+        <div id="vendor-products-list"></div>
+      </div>
+    </div>
+
+    <!-- ===== VENDOR: PROFILE ===== -->
+    <div id="page-v-profile" class="page">
+      <div class="page-header"><h1>Store Profile</h1></div>
+      <div id="vendor-profile-info"></div>
+    </div>
+
+    <!-- ===== VENDOR: ORDERS ===== -->
+    <div id="page-v-orders" class="page">
+      <div class="page-header"><h1>Orders for My Store</h1></div>
+      <div class="card"><div id="vendor-orders-list"></div></div>
+    </div>
+
+    <!-- ===== ADMIN: DASHBOARD ===== -->
+    <div id="page-a-home" class="page">
+      <div class="page-header"><h1>Admin Dashboard</h1></div>
+      <div class="stats-grid" id="admin-stats"></div>
+      <div class="card"><div class="card-title">Recent Feedback</div><div id="admin-feedback-preview"></div></div>
+    </div>
+
+    <!-- ===== ADMIN: USERS ===== -->
+    <div id="page-a-users" class="page">
+      <div class="page-header"><h1>User Management</h1></div>
+      <div class="info-box">Blocked users cannot log in. As admin, you have full control.</div>
+      <div class="card"><div class="card-title">All Users</div><div class="table-responsive" id="admin-users-list"></div></div>
+    </div>
+
+    <!-- ===== ADMIN: VENDOR APPROVALS ===== -->
+    <div id="page-a-vendors" class="page">
+      <div class="page-header"><h1>Vendor Approvals</h1></div>
+      <div class="card">
+        <div class="card-title">Pending Approvals <span class="badge badge-orange" id="pending-count">0 pending</span></div>
+        <div id="pending-vendors"></div>
+      </div>
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title">Approved Vendors</div>
+        <div id="approved-vendors-list"></div>
+      </div>
+    </div>
+
+    <!-- ===== ADMIN: PRODUCTS ===== -->
+    <div id="page-a-products" class="page">
+      <div class="page-header"><h1>All Products</h1></div>
+      <div class="card"><div class="table-responsive" id="admin-products-list"></div></div>
+    </div>
+
+    <!-- ===== ADMIN: ORDERS ===== -->
+    <div id="page-a-orders" class="page">
+      <div class="page-header"><h1>All Orders</h1></div>
+      <div class="card"><div class="table-responsive" id="admin-orders-list"></div></div>
+    </div>
+
+    <!-- ===== ADMIN: FEEDBACK ===== -->
+    <div id="page-a-feedback" class="page">
+      <div class="page-header"><h1>All Feedback ⭐</h1></div>
+      <div class="card"><div id="admin-all-feedback"></div></div>
+    </div>
+
+    <!-- ===== ADMIN: DELIVERY SETTINGS ===== -->
+    <div id="page-a-delivery" class="page">
+      <div class="page-header"><h1>Delivery Charge Settings</h1></div>
+      <div class="delivery-settings-card">
+        <h3>Delivery Charge Control</h3>
+        <p>Set delivery charges that apply to all customer orders</p>
+        <div class="delivery-setting-row">
+          <span class="delivery-setting-label">Base Delivery Charge (₹)</span>
+          <input class="delivery-input" type="number" id="base-delivery-charge" placeholder="20" min="0">
+        </div>
+        <div class="delivery-setting-row">
+          <span class="delivery-setting-label">Free Delivery Above Order Total (₹)</span>
+          <input class="delivery-input" type="number" id="free-delivery-above" placeholder="200" min="0">
+        </div>
+        <div class="delivery-setting-row">
+          <span class="delivery-setting-label">Express Delivery Charge (₹)</span>
+          <input class="delivery-input" type="number" id="express-delivery-charge" placeholder="40" min="0">
+        </div>
+        <button class="save-delivery-btn" onclick="saveDeliverySettings()">Save Settings</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Active Coupon Codes</div>
+        <div style="margin-bottom:16px;">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Coupon Code</label><input class="form-input" id="new-coupon-code" placeholder="e.g. GAON20"></div>
+            <div class="form-group"><label class="form-label">Discount %</label><input class="form-input" type="number" id="new-coupon-discount" placeholder="20" min="1" max="100"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Min Order Amount (₹)</label><input class="form-input" type="number" id="new-coupon-min" placeholder="100" min="0"></div>
+          <button class="btn-primary" onclick="addCoupon()">+ Add Coupon</button>
+        </div>
+        <div id="coupons-list"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app-screen -->
+
+<!-- Mobile Nav -->
+<div class="mobile-nav" id="mobile-nav"></div>
+
+<!-- CART FLOAT -->
+<div class="cart-float" id="cart-float" onclick="openCart()">
+  <span>&#9783;</span>
+  <div class="cart-count" id="cart-count">0</div>
+  <span id="cart-total">₹0</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================ ADD PRODUCT MODAL (Enhanced) ============================================================ -->
+<div class="modal-overlay" id="add-product-modal">
+  <div class="modal">
+    <div class="modal-title">Add New Product <span class="close-btn" onclick="closeModal('add-product-modal')">✕</span></div>
+
+    <!-- Step 1: Category/Subfolder -->
+    <div class="upload-step">
+      <div class="upload-step-title"><span class="step-num">1</span> Choose Category & Subfolder</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Main Category</label>
+          <select class="form-input" id="p-cat" onchange="updateProductSubcategories()">
+            <option value="Vegetables">Vegetables</option>
+            <option value="Fruits">Fruits</option>
+            <option value="Grains">Grains</option>
+            <option value="Dairy">Dairy</option>
+            <option value="Snacks">Snacks</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Home">Home & Kitchen</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subfolder / Subcategory</label>
+          <select class="form-input" id="p-subcat"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Photos -->
+    <div class="upload-step">
+      <div class="upload-step-title"><span class="step-num">2</span> Upload Product Photos</div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:10px;">Upload upto 3 photos. First photo will be main image.</p>
+      <div class="photo-grid">
+        <div class="photo-slot" id="photo-slot-0" onclick="triggerPhotoUpload(0)">
+          <span class="add-photo-icon">📷</span>
+          <div class="photo-remove" onclick="removePhoto(event,0)">✕</div>
+        </div>
+        <div class="photo-slot" id="photo-slot-1" onclick="triggerPhotoUpload(1)">
+          <span class="add-photo-icon">📷</span>
+          <div class="photo-remove" onclick="removePhoto(event,1)">✕</div>
+        </div>
+        <div class="photo-slot" id="photo-slot-2" onclick="triggerPhotoUpload(2)">
+          <span class="add-photo-icon">📷</span>
+          <div class="photo-remove" onclick="removePhoto(event,2)">✕</div>
+        </div>
+      </div>
+      <input type="file" id="p-photo-input" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+    </div>
+
+    <!-- Step 3: Product Details -->
+    <div class="upload-step">
+      <div class="upload-step-title"><span class="step-num">3</span> Product Details</div>
+      <div class="form-group"><label class="form-label">Product Name *</label><input class="form-input" id="p-name" placeholder="e.g. Fresh Tomatoes"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Price (₹) *</label><input class="form-input" id="p-price" type="number" placeholder="99" min="1"></div>
+        <div class="form-group"><label class="form-label">MRP (₹)</label><input class="form-input" id="p-mrp" type="number" placeholder="129" min="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Unit *</label><input class="form-input" id="p-unit" placeholder="1 kg / 500g / 1 dozen"></div>
+        <div class="form-group"><label class="form-label">Emoji Icon</label><input class="form-input" id="p-emoji" placeholder="🍅" maxlength="4"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Brand</label><input class="form-input" id="p-brand" placeholder="e.g. Local Farm"></div>
+        <div class="form-group"><label class="form-label">Stock Qty</label><input class="form-input" id="p-stock" type="number" placeholder="100" min="0"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" id="p-desc" rows="2" placeholder="Short description of your product..."></textarea></div>
+      <div class="form-group"><label class="form-label">Highlights (comma separated)</label><input class="form-input" id="p-highlights" placeholder="Farm fresh, Organic, No pesticides"></div>
+    </div>
+
+    <button class="btn-primary" onclick="submitProduct()" style="width:100%;padding:14px;font-size:15px;">Upload Product</button>
+  </div>
+</div>
+
+<!-- ============================================================ CART MODAL ============================================================ -->
+<div class="modal-overlay" id="cart-modal">
+  <div class="modal">
+    <div class="modal-title">Your Cart <span id="cart-item-count" style="font-size:13px;color:var(--text2);font-weight:400;"></span> <span class="close-btn" onclick="closeModal('cart-modal')">✕</span></div>
+
+    <div id="cart-items-list"></div>
+
+    <!-- Coupon suggestions -->
+    <div id="coupon-suggestions" style="margin:10px 0 4px;"></div>
+
+    <!-- Coupon input -->
+    <div style="margin-bottom:12px;">
+      <div class="coupon-input-row">
+        <input class="coupon-input" id="coupon-input" placeholder="Enter coupon code (e.g. GAON20)">
+        <button class="apply-btn" onclick="applyCoupon()">Apply</button>
+      </div>
+    </div>
+
+    <!-- Bill summary -->
+    <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div class="billing-row"><span>Subtotal</span><span id="cart-subtotal">₹0</span></div>
+      <div class="billing-row"><span>Delivery</span><span id="cart-delivery">₹0</span></div>
+      <div class="billing-row" style="color:var(--green);"><span>Discount</span><span id="cart-discount">₹0</span></div>
+      <div class="billing-row" style="font-weight:800;font-size:16px;"><span>Total</span><span id="cart-grand-total">₹0</span></div>
+    </div>
+
+    <button class="btn-primary" style="width:100%;padding:14px;font-size:15px;" onclick="openDeliveryModal()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- ============================================================ BILLING MODAL ============================================================ -->
+<div class="modal-overlay" id="billing-modal">
+  <div class="modal">
+    <div class="modal-title">Order Confirmed <span class="close-btn" onclick="closeModal('billing-modal')">✕</span></div>
+    <div id="billing-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================ CHECKOUT MODAL ============================================================ -->
+<div class="modal-overlay" id="checkout-modal">
+  <div class="modal">
+    <div class="modal-title">Checkout <span class="close-btn" onclick="closeModal('checkout-modal')">✕</span></div>
+    <div style="margin-bottom:16px;">
+      <label class="form-label">📍 Delivery Address *</label>
+      <textarea class="form-input" id="delivery-address" rows="3" placeholder="Enter your full delivery address..."></textarea>
+      <button class="location-btn" style="margin-top:8px;" onclick="getCurrentLocation()"><i class="fas fa-location-crosshairs"></i> Use GPS Location</button>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label class="form-label">Delivery Type</label>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="radio" name="delivery-type" value="standard" checked> Standard
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="radio" name="delivery-type" value="express"> ⚡ Express (+₹40)
+        </label>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label class="form-label">Coupon Code</label>
+      <div class="coupon-input-row" style="margin-top:8px;">
+        <input class="coupon-input" id="checkout-coupon-input" placeholder="e.g. GAON20">
+        <button class="apply-btn" onclick="applyCheckoutCoupon()">Apply</button>
+      </div>
+      <div id="checkout-coupon-msg" style="font-size:12px;margin-top:4px;"></div>
+    </div>
+    <div id="checkout-bill-summary" style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px;"></div>
+    <button class="btn-primary" style="width:100%;padding:14px;font-size:15px;" onclick="placeOrder()">Place Order</button>
+  </div>
+</div>
+
+<!-- VIEW ORDER MODAL -->
+<div class="modal-overlay" id="view-order-modal">
+  <div class="modal">
+    <div class="modal-title">Order Details <span class="close-btn" onclick="closeModal('view-order-modal')">✕</span></div>
+    <div id="view-order-content"></div>
+  </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal-overlay" id="product-detail-modal">
+  <div class="modal" style="max-width:480px;width:100%;padding:0;overflow:hidden;border-radius:20px;">
+    <div style="position:relative;">
+      <span class="close-btn" onclick="closeModal('product-detail-modal')" style="position:absolute;top:12px;right:12px;z-index:10;background:rgba(0,0,0,0.5);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">✕</span>
+      <div id="product-detail-content" style="padding:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Phone Number Modal (after Google Sign In) -->
+<div class="modal-overlay" id="phone-modal">
+  <div class="modal" style="max-width:380px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:12px;">📱</div>
+    <div class="modal-title" style="justify-content:center;border:none;">One Last Step!</div>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:20px;">Please add your phone number so vendors can contact you for delivery.</p>
+    <div style="position:relative;margin-bottom:8px;">
+      <input id="modal-phone" type="tel" placeholder="Enter 10-digit phone number" maxlength="10"
+        oninput="this.value=this.value.replace(/\D/g,''); document.getElementById('phone-digit-count').textContent=this.value.length+'/10';"
+        style="width:100%;padding:13px 55px 13px 16px;background:#f0f9eb;border:2.5px solid #3a6b35;border-radius:12px;font-size:20px;font-family:'Nunito',sans-serif;color:#1a3a16;font-weight:800;outline:none;letter-spacing:3px;box-sizing:border-box;">
+      <span id="phone-digit-count" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;color:#5a9e4a;font-weight:700;font-family:'Nunito',sans-serif;">0/10</span>
+    </div>
+    <div id="phone-modal-error" class="auth-error"></div>
+    <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="savePhoneNumber()">Save & Continue →</button>
+    <button onclick="closeModal('phone-modal')" style="margin-top:10px;background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;">Skip for now</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// GramExpress — API-Connected Frontend
+// All data operations go through the real backend API
+// ============================================================
+
+const API = '';  // same origin, backend serves this file
+
+const CATEGORIES = {
+  'Vegetables': { icon: '🥬', subcategories: ['Leafy Greens','Root Vegetables','Tomatoes & Peppers','Onion & Garlic','Gourds','Beans & Peas','Exotic Vegetables'] },
+  'Fruits':     { icon: '🍎', subcategories: ['Citrus Fruits','Tropical Fruits','Berries','Apples & Pears','Melons','Dry Fruits','Seasonal Fruits'] },
+  'Grains':     { icon: '🌾', subcategories: ['Rice','Wheat & Flour','Pulses & Lentils','Millets','Cereals','Oats & Muesli'] },
+  'Dairy':      { icon: '🥛', subcategories: ['Milk','Curd & Yogurt','Paneer & Cheese','Butter & Ghee','Cream','Milk Products'] },
+  'Snacks':     { icon: '🍿', subcategories: ['Chips & Namkeen','Biscuits & Cookies','Chocolates','Sweets','Instant Noodles','Breakfast Items'] },
+  'Electronics':{ icon: '📱', subcategories: ['Mobile Accessories','Earphones','Chargers & Cables','Power Banks','LED Lights','Batteries'] },
+  'Clothing':   { icon: '👕', subcategories: ["Men's Wear","Women's Wear","Kids Wear","Ethnic Wear","Accessories","Footwear"] },
+  'Home':       { icon: '🏠', subcategories: ['Kitchen Items','Cleaning Supplies','Storage','Decor','Tools','Gardening'] }
+};
+
+// ── State ─────────────────────────────────────────────────────
+let currentUser = null;
+let authToken   = localStorage.getItem('gm_token') || null;
+let db = { users:[], products:[], orders:[], feedback:[], settings:{} };
+
+let cartItems = [];
+let currentCat = 'All';
+let currentSubcat = 'All';
+let currentSort = 'default';
+let currentFeedbackStar = 0;
+let currentLocation = null;
+let productPhotos = ['','',''];
+let currentUploadSlot = 0;
+let appliedCoupon = null;
+
+// ── API Helpers ────────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers||{}) };
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const res = await fetch(API + path, { ...opts, headers });
+  const data = await res.json();
+  if (!res.ok) throw { status: res.status, message: data.error || 'Error' };
+  return data;
+}
+
+async function loadSnapshot() {
+  try {
+    const snap = await apiFetch('/api/snapshot');
+    db.users    = snap.users    || [];
+    db.products = snap.products || [];
+    db.orders   = snap.orders   || [];
+    db.feedback = snap.feedback || [];
+    db.settings = snap.settings || {};
+  } catch(e) { console.warn('Snapshot failed', e); }
+}
+
+function getSettings() { return db.settings || { baseDeliveryCharge:20, freeDeliveryAbove:200, expressDeliveryCharge:40, coupons:[] }; }
+function getUserById(id) { return db.users.find(u => u.id === id); }
+
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+
+// ── SIDEBAR & MOBILE NAV ──────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+
+function renderMobileNav() {
+  const role = currentUser?.role;
+  if (!role) return;
+  const configs = {
+    customer: [{ icon:'🏠',label:'Shop',page:'c-home'},{icon:'📦',label:'Orders',page:'c-orders'},{icon:'⭐',label:'Feedback',page:'c-feedback'},{icon:'👤',label:'Profile',page:'c-profile'}],
+    vendor:   [{icon:'📊',label:'Dashboard',page:'v-home'},{icon:'🧾',label:'Orders',page:'v-orders'},{icon:'👤',label:'Profile',page:'v-profile'}],
+    admin:    [{icon:'📊',label:'Dashboard',page:'a-home'},{icon:'👥',label:'Users',page:'a-users'},{icon:'✅',label:'Vendors',page:'a-vendors'},{icon:'🚚',label:'Delivery',page:'a-delivery'}]
+  };
+  document.getElementById('mobile-nav').innerHTML = `<div class="mobile-nav-items">${configs[role].map(i=>`<div class="mobile-nav-item" onclick="mobileNavTo('${i.page}',this)"><span style="font-size:20px;">${i.icon}</span><span>${i.label}</span></div>`).join('')}<div class="mobile-nav-item" onclick="doLogout()" style="color:var(--red);"><span style="font-size:20px;">🚪</span><span>Logout</span></div></div>`;
+}
+function mobileNavTo(page, el) {
+  document.querySelectorAll('.mobile-nav-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active'); showPage(page, null);
+}
+
+// ── AUTH ───────────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').classList.toggle('active', tab==='login');
+  document.getElementById('register-form').classList.toggle('active', tab==='register');
+}
+
+document.getElementById('reg-role').addEventListener('change', function() {
+  document.getElementById('vendor-extra').style.display  = this.value==='vendor'?'block':'none';
+  document.getElementById('customer-extra').style.display= this.value==='customer'?'block':'none';
+});
+
+
+function showAuthError(formId, msg) {
+  const el = document.getElementById(formId);
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+async function handleGoogleSignIn() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope('email');
+    provider.addScope('profile');
+    const result = await firebase.auth().signInWithPopup(provider);
+    const user = result.user;
+    const data = await apiFetch('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ name: user.displayName, email: user.email })
+    });
+    authToken = data.token;
+    localStorage.setItem('gm_token', authToken);
+    currentUser = data.user;
+    await loadSnapshot();
+    showToast('✅ Logged in with Google!');
+    enterApp();
+    // Show phone modal if no phone number
+    if (!currentUser.phone || currentUser.phone === '') {
+      setTimeout(() => openModal('phone-modal'), 800);
+    }
+  } catch(e) {
+    if (e.code === 'auth/popup-closed-by-user') return;
+    showAuthError('login-error', '❌ ' + (e.message || 'Google login failed'));
+  }
+}
+
+async function savePhoneNumber() {
+  const phone = document.getElementById('modal-phone').value.trim();
+  const errEl = document.getElementById('phone-modal-error');
+  if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+    errEl.textContent = '❌ Please enter a valid 10-digit phone number';
+    errEl.classList.add('show');
+    return;
+  }
+  try {
+    const data = await apiFetch('/api/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ phone })
+    });
+    currentUser.phone = phone;
+    closeModal('phone-modal');
+    showToast('✅ Phone number saved!');
+  } catch(e) {
+    errEl.textContent = '❌ ' + e.message;
+    errEl.classList.add('show');
+  }
+}
+
+async function handleLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showAuthError('login-error','Please fill all fields'); return; }
+  try {
+    const data = await apiFetch('/api/auth/login', { method:'POST', body: JSON.stringify({ email, password }) });
+    authToken = data.token;
+    localStorage.setItem('gm_token', authToken);
+    currentUser = data.user;
+    await loadSnapshot();
+    enterApp();
+  } catch(e) {
+    if (e.message === 'blocked') { currentUser = e.user||{}; showScreen('blocked-screen'); return; }
+    if (e.message === 'pending') {
+      document.getElementById('pending-email-display').textContent = 'Account: ' + email;
+      showScreen('pending-screen'); return;
+    }
+    showAuthError('login-error', e.message);
+  }
+}
+
+async function handleRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim().toLowerCase();
+  const password = document.getElementById('reg-password').value;
+  const role     = document.getElementById('reg-role').value;
+  if (!name||!email||!password||!role) { showAuthError('reg-error', 'Please fill all required fields'); return; }
+  if (password.length < 6) { showAuthError('reg-error', 'Password must be at least 6 characters'); return; }
+
+  const body = { name, email, password, role };
+  if (role === 'customer') {
+    const cphone = document.getElementById('reg-cphone')?.value.trim() || '';
+    if (!cphone || !/^\d{10}$/.test(cphone.replace(/\D/g,''))) { showAuthError('reg-error', 'Please enter a valid 10-digit phone number'); return; }
+    body.phone   = cphone;
+    body.address = document.getElementById('reg-address')?.value.trim() || '';
+  }
+  if (role === 'vendor') {
+    const phone = document.getElementById('reg-phone')?.value.trim() || '';
+    body.storeName = document.getElementById('reg-store').value.trim();
+    body.location  = document.getElementById('reg-location').value.trim();
+    body.category  = document.getElementById('reg-vcat').value;
+    body.phone     = phone;
+    if (!phone || !/^\d{10}$/.test(phone.replace(/\D/g,''))) { showAuthError('reg-error', 'Please enter a valid 10-digit phone number'); return; }
+    if (!body.storeName || !body.location) { showAuthError('reg-error', 'Store name and location are required'); return; }
+  }
+
+  try {
+    const data = await apiFetch('/api/auth/register', { method:'POST', body: JSON.stringify(body) });
+    if (data.status === 'pending') {
+      document.getElementById('pending-email-display').textContent = 'Account: ' + email;
+      showScreen('pending-screen'); return;
+    }
+    authToken = data.token;
+    localStorage.setItem('gm_token', authToken);
+    currentUser = data.user;
+    await loadSnapshot();
+    enterApp();
+  } catch(e) { showAuthError('reg-error', e.message); }
+}
+
+function doLogout() {
+  currentUser = null; authToken = null; cartItems = []; appliedCoupon = null;
+  localStorage.removeItem('gm_token');
+  updateCartUI();
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').classList.remove('show');
+  showScreen('auth-screen'); switchAuthTab('login');
+}
+
+// ── SCREEN & PAGE ──────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function enterApp() {
+  const role = currentUser.role;
+  showScreen('app-screen');
+  const av = document.getElementById('su-avatar');
+  if (currentUser.profilePic) av.innerHTML = `<img src="${currentUser.profilePic}" alt="">`;
+  else av.textContent = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  av.className = 'su-avatar'+(role==='admin'?' admin-av':role==='vendor'?' vendor-av':'');
+  document.getElementById('su-name').textContent = currentUser.name;
+  document.getElementById('su-role').textContent = role==='vendor'?(currentUser.storeName||'Vendor'):role.charAt(0).toUpperCase()+role.slice(1);
+  document.getElementById('sidebar-panel-text').textContent = role.charAt(0).toUpperCase()+role.slice(1)+' Panel';
+  const badge = document.getElementById('role-badge');
+  badge.className = 'sidebar-role-badge badge-'+role;
+  badge.textContent = role==='admin'?'Admin':role==='vendor'?'Vendor':'Customer';
+
+  const navConfigs = {
+    customer: [{icon:'🏠',label:'Shop',page:'c-home'},{icon:'📦',label:'My Orders',page:'c-orders'},{icon:'⭐',label:'Feedback',page:'c-feedback'},{icon:'👤',label:'Profile',page:'c-profile'}],
+    vendor:   [{icon:'📊',label:'Dashboard',page:'v-home'},{icon:'🧾',label:'Orders',page:'v-orders'},{icon:'👤',label:'My Profile',page:'v-profile'}],
+    admin:    [{icon:'📊',label:'Dashboard',page:'a-home'},{icon:'👥',label:'Users',page:'a-users'},{icon:'✅',label:'Vendors',page:'a-vendors'},{icon:'📦',label:'Products',page:'a-products'},{icon:'🧾',label:'Orders',page:'a-orders'},{icon:'🚚',label:'Delivery',page:'a-delivery'},{icon:'⭐',label:'Feedback',page:'a-feedback'}]
+  };
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = '';
+  navConfigs[role].forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'nav-item'; el.dataset.page = item.page;
+    el.innerHTML = `<span class="nav-icon">${item.icon}</span><span>${item.label}</span>`;
+    el.onclick = () => { showPage(item.page, el); if(window.innerWidth<=768) toggleSidebar(); };
+    nav.appendChild(el);
+  });
+  document.getElementById('mobile-nav').style.display = role?'block':'none';
+  renderMobileNav();
+  updateCartUI();
+  const firstPage = navConfigs[role][0].page;
+  const firstEl   = nav.querySelector('.nav-item');
+  showPage(firstPage, firstEl);
+  const firstMob = document.querySelector('.mobile-nav-item');
+  if (firstMob) firstMob.classList.add('active');
+}
+
+function showPage(pageId, navEl) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const page = document.getElementById('page-'+pageId);
+  if (page) page.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  renderPage(pageId);
+}
+
+function renderPage(pageId) {
+  const map = {
+    'c-home': renderShop, 'c-orders': renderMyOrders,
+    'c-feedback': renderFeedbackPage, 'c-profile': renderCustomerProfile,
+    'v-home': renderVendorHome, 'v-orders': renderVendorOrders, 'v-profile': renderVendorProfile,
+    'a-home': renderAdminHome, 'a-users': renderAdminUsers, 'a-vendors': renderVendorApprovals,
+    'a-products': renderAdminProducts, 'a-orders': renderAdminOrders,
+    'a-feedback': renderAdminFeedback, 'a-delivery': renderDeliverySettings,
+  };
+  if (map[pageId]) map[pageId]();
+}
+
+// ── VOICE SEARCH ───────────────────────────────────────────────
+function startVoiceSearch() {
+  if (!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)) { showToast('Voice search not supported'); return; }
+  const SpeechRecognition = window.SpeechRecognition||window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  const voiceBtn = document.getElementById('voice-btn');
+  recognition.lang='en-IN'; recognition.interimResults=false; recognition.maxAlternatives=1;
+  voiceBtn.classList.add('listening'); showToast('🎤 Listening...');
+  recognition.start();
+  recognition.onresult = (e) => { document.getElementById('search-input').value=e.results[0][0].transcript; filterProducts(); showToast('🎤 Done!'); };
+  recognition.onerror = ()=>showToast('Voice error');
+  recognition.onend  = ()=>voiceBtn.classList.remove('listening');
+}
+
+// ── SHOP ───────────────────────────────────────────────────────
+function renderShop() { renderCategoryPills(); filterProducts(); }
+
+function renderCategoryPills() {
+  const scroll = document.getElementById('category-scroll');
+  const cats = ['All',...Object.keys(CATEGORIES)];
+  scroll.innerHTML = cats.map(cat=>`
+    <div class="cat-pill ${currentCat===cat?'active':''}" onclick="selectCategory('${cat}')">
+      <span class="cat-icon">${cat==='All'?'🛒':CATEGORIES[cat]?.icon||'📦'}</span>
+      <span>${cat}</span>
+    </div>
+  `).join('');
+  renderSubcatChips();
+}
+
+function renderSubcatChips() {
+  const el = document.getElementById('subcat-chips');
+  if (!el) return;
+  if (currentCat==='All') { el.innerHTML=''; return; }
+  const subs = CATEGORIES[currentCat]?.subcategories||[];
+  el.innerHTML = ['All',...subs].map(s=>`
+    <div class="subcat-chip ${currentSubcat===s?'active':''}" onclick="selectSubcat('${s}')">${s}</div>
+  `).join('');
+}
+
+function selectCategory(cat) {
+  currentCat=cat; currentSubcat='All';
+  renderCategoryPills(); filterProducts();
+}
+function selectSubcat(sub) {
+  currentSubcat=sub; renderSubcatChips(); filterProducts();
+}
+
+function filterProducts() {
+  const search = (document.getElementById('search-input')?.value||'').toLowerCase();
+  let products = db.products.filter(p=>{
+    if (currentCat!=='All'&&p.category!==currentCat) return false;
+    if (currentSubcat!=='All'&&p.subcategory!==currentSubcat) return false;
+    if (search && !p.name.toLowerCase().includes(search)&&!(p.desc||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  if (currentSort==='price-asc')  products.sort((a,b)=>a.price-b.price);
+  if (currentSort==='price-desc') products.sort((a,b)=>b.price-a.price);
+  if (currentSort==='newest')     products.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  document.getElementById('products-section-title').textContent = currentCat==='All'?'All Products':currentCat;
+  renderProductGrid(products);
+}
+
+function sortProducts(val) { currentSort=val; filterProducts(); }
+
+function renderProductGrid(products) {
+  const grid = document.getElementById('products-grid');
+  if (!products.length) { grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1;"><div class="es-icon">😕</div><p>No products found</p></div>`; return; }
+  grid.innerHTML = products.map(p => {
+    const inCart = cartItems.find(c=>c.id===p.id);
+    const vendor = db.users.find(u=>u.id===p.vendorId);
+    const discount = p.mrp&&p.mrp>p.price?Math.round((p.mrp-p.price)/p.mrp*100):0;
+    const mainPhoto = (p.photos&&p.photos[0])||p.image||'';
+    return `<div class="product-card" onclick="viewProduct('${p.id}')">
+      <div class="product-img-wrap" style="position:relative;">
+        ${mainPhoto?`<img src="${mainPhoto}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`:`<span style="font-size:48px;">${p.emoji||'📦'}</span>`}
+        ${discount>0?`<span style="position:absolute;top:8px;left:8px;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;">${discount}% OFF</span>`:''}
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-unit">${p.unit||''}</div>
+        ${vendor?`<div style="font-size:10px;color:var(--text3);margin-top:2px;">🏪 ${vendor.storeName||vendor.name}</div>`:''}
+        <div class="product-price-row">
+          <div><span class="product-price">₹${p.price}</span>${p.mrp&&p.mrp>p.price?`<span class="product-mrp">₹${p.mrp}</span>`:''}</div>
+          ${inCart
+            ?`<div class="qty-control" onclick="event.stopPropagation()"><button onclick="changeQty('${p.id}',-1)">−</button><span>${inCart.qty}</span><button onclick="changeQty('${p.id}',1)">+</button></div>`
+            :`<button class="add-btn" onclick="event.stopPropagation();addToCart('${p.id}')">+</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function viewProduct(pid) {
+  const p = db.products.find(x=>x.id===pid);
+  if (!p) return;
+  const vendor = db.users.find(u=>u.id===p.vendorId);
+  const inCart = cartItems.find(c=>c.id===p.id);
+  const allPhotos = (p.photos||[]).filter(Boolean);
+  const discount = p.mrp&&p.mrp>p.price?Math.round((p.mrp-p.price)/p.mrp*100):0;
+  document.getElementById('product-detail-content').innerHTML = `
+    <div style="position:relative;padding-top:60%;background:linear-gradient(135deg,#eef5e8,#f7efe6);overflow:hidden;margin:-20px -20px 16px;">
+      ${allPhotos.length?`<img src="${allPhotos[0]}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">`:`<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:90px;">${p.emoji||'📦'}</div>`}
+      ${discount>0?`<span style="position:absolute;top:12px;left:12px;background:var(--green);color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;">${discount}% OFF</span>`:''}
+    </div>
+    <h2 style="font-size:19px;font-weight:800;color:var(--text1);margin-bottom:4px;">${p.name}</h2>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">${p.unit||''} ${p.brand?`· <b>${p.brand}</b>`:''}</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:12px;background:var(--bg);border-radius:12px;">
+      <span style="font-size:24px;font-weight:900;color:var(--green);">₹${p.price}</span>
+      ${p.mrp&&p.mrp>p.price?`<span style="font-size:15px;color:var(--text3);text-decoration:line-through;">₹${p.mrp}</span><span style="font-size:12px;background:#e8f5e9;color:var(--green);padding:3px 10px;border-radius:20px;font-weight:700;">Save ₹${p.mrp-p.price}</span>`:''}
+    </div>
+    ${vendor?`<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:14px;">
+      <span style="font-size:22px;">🏪</span>
+      <div><div style="font-size:13px;font-weight:700;">${vendor.storeName||vendor.name}</div><div style="font-size:11px;color:var(--text2);">📍 ${vendor.location||'Local Store'}</div></div>
+    </div>`:''}
+    ${(p.description||p.desc)?`
+    <div style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:6px;">📋 Product Details</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;background:var(--bg);padding:12px;border-radius:10px;">${p.description||p.desc}</p>
+    </div>`:''}
+    ${p.category?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <span style="font-size:11px;background:var(--green-light);color:var(--green);padding:4px 10px;border-radius:20px;font-weight:600;">📂 ${p.category}</span>
+      ${p.subcategory?`<span style="font-size:11px;background:var(--bg);color:var(--text2);padding:4px 10px;border-radius:20px;font-weight:600;border:1px solid var(--border);">${p.subcategory}</span>`:''}
+    </div>`:''}
+    ${inCart
+      ?`<div class="qty-control" style="justify-content:center;margin-top:4px;"><button onclick="changeQty('${p.id}',-1)">−</button><span>${inCart.qty}</span><button onclick="changeQty('${p.id}',1)">+</button></div>`
+      :`<button class="btn-primary" style="width:100%;margin-top:4px;font-size:15px;padding:14px;" onclick="addToCart('${p.id}');closeModal('product-detail-modal')">🛒 Add to Cart</button>`}
+  `;
+  openModal('product-detail-modal');
+}
+
+// ── CART ───────────────────────────────────────────────────────
+function addToCart(pid) {
+  if (!currentUser || currentUser.role !== 'customer') { showToast('Please log in as a customer to add items'); return; }
+  const p = db.products.find(x=>x.id===pid);
+  if (!p) return;
+  const existing = cartItems.find(c=>c.id===pid);
+  if (existing) existing.qty++;
+  else cartItems.push({ id:p.id, name:p.name, price:p.price, vendorId:p.vendorId, vendorName:db.users.find(u=>u.id===p.vendorId)?.storeName||'', emoji:p.emoji||'📦', qty:1 });
+  updateCartUI();
+  showToast('Added: '+p.name);
+  // Refresh the product grid so qty controls show/hide properly
+  const gridEl = document.getElementById('products-grid');
+  if (gridEl) filterProducts();
+}
+
+function changeQty(pid, delta) {
+  const i = cartItems.findIndex(c=>c.id===pid);
+  if (i===-1) return;
+  cartItems[i].qty += delta;
+  if (cartItems[i].qty<=0) cartItems.splice(i,1);
+  updateCartUI(); filterProducts();
+  const modal = document.getElementById('product-detail-modal');
+  if (modal.classList.contains('open')) viewProduct(pid);
+}
+
+function updateCartUI() {
+  const total = cartItems.reduce((s,c)=>s+c.qty,0);
+  const amount = cartItems.reduce((s,c)=>s+c.price*c.qty,0);
+  const cnt = document.getElementById('cart-count');
+  if (cnt) cnt.textContent = total;
+  const cartTotal = document.getElementById('cart-total');
+  if (cartTotal) cartTotal.textContent = '₹'+amount;
+  const cartFloat = document.getElementById('cart-float');
+  if (cartFloat) cartFloat.style.display = total>0&&currentUser?.role==='customer'?'flex':'none';
+}
+
+function openCart() {
+  if (!cartItems.length) { showToast('Cart is empty'); return; }
+  const settings = getSettings();
+  const subtotal  = cartItems.reduce((s,c)=>s+c.price*c.qty,0);
+  const delivery  = subtotal>=settings.freeDeliveryAbove?0:settings.baseDeliveryCharge;
+  const discount  = appliedCoupon ? Math.floor(subtotal*appliedCoupon.discount/100) : 0;
+  const total     = subtotal+delivery-discount;
+
+  document.getElementById('cart-items-list').innerHTML = cartItems.map(c=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;min-width:0;"><span style="font-size:18px;">${c.emoji}</span> <strong>${c.name}</strong><br><span style="font-size:12px;color:var(--text2);">₹${c.price} × ${c.qty} = ₹${c.price*c.qty}</span></div>
+      <div class="qty-control" style="margin-left:10px;"><button onclick="changeQtyCart('${c.id}',-1)">−</button><span>${c.qty}</span><button onclick="changeQtyCart('${c.id}',1)">+</button></div>
+    </div>`).join('');
+
+  document.getElementById('cart-subtotal').textContent  = '₹'+subtotal;
+  document.getElementById('cart-delivery').textContent  = delivery===0?'Free':'₹'+delivery;
+  document.getElementById('cart-discount').textContent  = discount>0?'−₹'+discount:'₹0';
+  document.getElementById('cart-grand-total').textContent = '₹'+total;
+  document.getElementById('cart-item-count').textContent  = cartItems.length+' item'+(cartItems.length>1?'s':'');
+
+  const coupons = settings.coupons||[];
+  document.getElementById('coupon-suggestions').innerHTML = coupons.length
+    ? `<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Available coupons:</div>`+coupons.map(c=>`
+      <div style="display:inline-block;margin:3px;padding:4px 10px;background:var(--green-light);border:1px dashed var(--green);border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;" onclick="applyCouponCode('${c.code}')">
+        ${c.code} — ${c.discount}% off (min ₹${c.minOrder})
+      </div>`).join('')
+    : '';
+
+  openModal('cart-modal');
+}
+
+function changeQtyCart(pid, delta) {
+  const i = cartItems.findIndex(c=>c.id===pid);
+  if (i===-1) return;
+  cartItems[i].qty += delta;
+  if (cartItems[i].qty<=0) cartItems.splice(i,1);
+  updateCartUI();
+  if (!cartItems.length) { closeModal('cart-modal'); return; }
+  openCart(); // re-render cart modal
+  if (document.getElementById('products-grid')) filterProducts();
+}
+
+function applyCouponCode(code) {
+  document.getElementById('coupon-input').value = code;
+  applyCoupon();
+}
+
+function applyCoupon() {
+  const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+  const settings = getSettings();
+  const coupon = (settings.coupons||[]).find(c=>c.code===code);
+  if (!coupon) { showToast('Invalid coupon'); return; }
+  const subtotal = cartItems.reduce((s,c)=>s+c.price*c.qty,0);
+  if (subtotal < coupon.minOrder) { showToast(`⚠️ Min order ₹${coupon.minOrder} required`); return; }
+  appliedCoupon = coupon;
+  showToast('Coupon '+code+' applied! '+coupon.discount+'% off');
+  openCart();
+}
+
+function applyCheckoutCoupon() {
+  const code = document.getElementById('checkout-coupon-input').value.trim().toUpperCase();
+  const settings = getSettings();
+  const coupon = (settings.coupons||[]).find(c=>c.code===code);
+  if (!coupon) { document.getElementById('checkout-coupon-msg').innerHTML='<span style="color:var(--red);">❌ Invalid coupon</span>'; return; }
+  const subtotal = cartItems.reduce((s,c)=>s+c.price*c.qty,0);
+  if (subtotal < coupon.minOrder) { document.getElementById('checkout-coupon-msg').innerHTML=`<span style="color:var(--red);">⚠️ Min order ₹${coupon.minOrder}</span>`; return; }
+  appliedCoupon = coupon;
+  document.getElementById('checkout-coupon-msg').innerHTML=`<span style="color:var(--green);">✅ ${coupon.discount}% off applied!</span>`;
+  updateCheckoutBill();
+}
+
+function updateCheckoutBill() {
+  const settings = getSettings();
+  const subtotal  = cartItems.reduce((s,c)=>s+c.price*c.qty,0);
+  const isExpress = document.querySelector('input[name="delivery-type"]:checked')?.value==='express';
+  const delivery  = subtotal>=settings.freeDeliveryAbove?0:settings.baseDeliveryCharge + (isExpress?(settings.expressDeliveryCharge||40):0);
+  const discount  = appliedCoupon?Math.floor(subtotal*appliedCoupon.discount/100):0;
+  const total     = subtotal+delivery-discount;
+  const el = document.getElementById('checkout-bill-summary');
+  if (el) el.innerHTML = `
+    <div class="billing-row"><span>Subtotal (${cartItems.length} items)</span><span>₹${subtotal}</span></div>
+    <div class="billing-row"><span>Delivery</span><span>${delivery===0?'🎉 Free':'₹'+delivery}</span></div>
+    ${discount>0?`<div class="billing-row" style="color:var(--green);"><span>Discount (${appliedCoupon.code})</span><span>−₹${discount}</span></div>`:''}
+    <div class="billing-row" style="font-weight:800;font-size:16px;border-top:1px solid var(--border);padding-top:10px;margin-top:4px;"><span>Total</span><span style="color:var(--green);">₹${total}</span></div>
+  `;
+}
+
+function openDeliveryModal() {
+  if (!cartItems.length) { showToast('Cart is empty'); return; }
+  closeModal('cart-modal');
+  const addr = currentUser?.address||'';
+  document.getElementById('delivery-address').value = addr;
+  openModal('checkout-modal');
+  updateCheckoutBill();
+  if (navigator.geolocation && !addr) {
+    navigator.geolocation.getCurrentPosition(pos=>{
+      currentLocation = pos.coords;
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+        .then(r=>r.json()).then(data=>{
+          const a = data.display_name||'';
+          if (a) document.getElementById('delivery-address').value = a;
+        }).catch(()=>{});
+    });
+  }
+}
+
+function getCurrentLocation() { useCurrentLocation(); }
+function useCurrentLocation() {
+  if (!navigator.geolocation) { showToast('Location not supported'); return; }
+  showToast('📍 Getting location...');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+      .then(r=>r.json()).then(data=>{ document.getElementById('delivery-address').value = data.display_name||''; showToast('📍 Location set!'); })
+      .catch(()=>showToast('Location error'));
+  }, ()=>showToast('Location denied'));
+}
+
+async function placeOrder() {
+  const address      = document.getElementById('delivery-address').value.trim();
+  const deliveryType = document.querySelector('input[name="delivery-type"]:checked')?.value||'standard';
+  if (!address) { showToast('Enter delivery address'); return; }
+  if (!cartItems.length) { showToast('Cart is empty'); return; }
+
+  try {
+    const data = await apiFetch('/api/orders', {
+      method:'POST',
+      body: JSON.stringify({
+        items: cartItems.map(c=>({ productId:c.id, vendorId:c.vendorId, name:c.name, price:c.price, qty:c.qty, emoji:c.emoji })),
+        address, deliveryType,
+        couponCode: appliedCoupon?.code||null
+      })
+    });
+    (data.orders||[]).forEach(o => db.orders.unshift(o));
+    // Update currentUser address in local state
+    if (currentUser) currentUser.address = address;
+    cartItems = []; appliedCoupon = null;
+    updateCartUI();
+    closeModal('checkout-modal');
+    showToast('Order placed successfully!');
+    // Navigate to orders page
+    const navEl = document.querySelector('.nav-item[data-page="c-orders"]');
+    showPage('c-orders', navEl);
+    // Highlight mobile nav
+    document.querySelectorAll('.mobile-nav-item').forEach(el=>el.classList.remove('active'));
+  } catch(e) { showToast(''+(e.message||'Order failed')); }
+}
+
+// ── CUSTOMER — MY ORDERS ───────────────────────────────────────
+function renderMyOrders() {
+  const orders = db.orders.filter(o=>o.customerId===currentUser.id);
+  const statusMap = { processing:{label:'⏳ Processing',cls:'badge-orange'}, out_for_delivery:{label:'🚴 Out for Delivery',cls:'badge-blue'}, delivered:{label:'✅ Delivered',cls:'badge-green'}, cancelled:{label:'❌ Cancelled',cls:'badge-red'} };
+  document.getElementById('my-orders-list').innerHTML = !orders.length
+    ? `<div class="empty-state"><div class="es-icon">📦</div><p>No orders yet. Start shopping!</p></div>`
+    : orders.map(o=>`
+      <div class="order-card">
+        <div class="order-header"><span class="order-id">#${o.id}</span><span class="badge ${statusMap[o.status]?.cls||'badge-gray'}">${statusMap[o.status]?.label||o.status}</span></div>
+        <div class="order-meta">${o.date} · 🏪 ${o.vendorName}</div>
+        <div class="order-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty}`).join(' · ')}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <span style="font-size:16px;font-weight:700;color:var(--green);">₹${o.total}</span>
+          <button class="btn-primary" style="padding:6px 14px;font-size:12px;" onclick="viewOrderDetails('${o.id}')">View Details</button>
+        </div>
+      </div>`).join('');
+}
+
+// ── FEEDBACK ───────────────────────────────────────────────────
+function renderFeedbackPage() {
+  const vendors = db.users.filter(u=>u.role==='vendor'&&u.vendorStatus==='approved');
+  document.getElementById('feedback-vendor-select').innerHTML = `<option value="">General Feedback</option>`+vendors.map(v=>`<option value="${v.id}">${v.storeName||v.name}</option>`).join('');
+  renderFeedbackList('feedback-list', db.feedback.filter(f=>f.userId===currentUser.id).slice().reverse());
+}
+
+function setFeedbackStar(n) {
+  currentFeedbackStar=n;
+  document.querySelectorAll('.star-btn').forEach((s,i)=>s.classList.toggle('active',i<n));
+}
+
+function renderFeedbackList(containerId, feedbacks) {
+  const el = document.getElementById(containerId);
+  if (!feedbacks.length) { el.innerHTML=`<div class="empty-state"><div class="es-icon">⭐</div><p>No feedback yet</p></div>`; return; }
+  el.innerHTML = feedbacks.map(f=>`
+    <div class="feedback-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div><strong>${f.userName}</strong>${f.vendorName?`<span style="font-size:11px;color:var(--text3);margin-left:8px;">→ ${f.vendorName}</span>`:''}</div>
+        <div style="color:#f59e0b;">★</div>
+      </div>
+      <div style="display:flex;gap:3px;margin-bottom:6px;">${Array.from({length:5},(_,i)=>`<span style="color:${i<f.rating?'#f59e0b':'#e5e7eb'};">★</span>`).join('')}</div>
+      <p style="font-size:13px;color:var(--text2);">${f.text}</p>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;">${f.date}</div>
+    </div>`).join('');
+}
+
+async function submitFeedback() {
+  if (!currentFeedbackStar) { showToast('Select a rating'); return; }
+  const text     = document.getElementById('feedback-text').value.trim();
+  const vendorId = document.getElementById('feedback-vendor-select').value;
+  const vendor   = db.users.find(u=>u.id===vendorId);
+  try {
+    const fb = await apiFetch('/api/feedback', {
+      method:'POST',
+      body: JSON.stringify({ vendorId:vendorId||null, vendorName:vendor?.storeName||vendor?.name||'General', rating:currentFeedbackStar, text })
+    });
+    db.feedback.unshift(fb);
+    showToast('⭐ Thank you for your feedback!');
+    document.getElementById('feedback-text').value='';
+    currentFeedbackStar=0;
+    document.querySelectorAll('.star-btn').forEach(s=>s.classList.remove('active'));
+    renderFeedbackPage();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+// ── CUSTOMER PROFILE ──────────────────────────────────────────
+function renderCustomerProfile() {
+  const myOrders    = db.orders.filter(o=>o.customerId===currentUser.id);
+  const totalSpent  = myOrders.reduce((s,o)=>s+o.total,0);
+  const delivered   = myOrders.filter(o=>o.status==='delivered').length;
+  const initials    = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const avatarHtml  = currentUser.profilePic
+    ? `<img src="${currentUser.profilePic}" alt="avatar">`
+    : initials;
+
+  document.getElementById('customer-profile-info').innerHTML = `
+    <!-- Hero -->
+    <div class="profile-hero">
+      <div class="profile-avatar-big">${avatarHtml}</div>
+      <div class="profile-hero-info">
+        <div class="profile-hero-name">${currentUser.name}</div>
+        <div class="profile-hero-sub">${currentUser.email}</div>
+        <div class="profile-hero-tags">
+          <span class="profile-tag">Customer</span>
+          ${currentUser.phone?`<span class="profile-tag">📞 ${currentUser.phone}</span>`:''}
+          <span class="profile-tag">📅 Since ${currentUser.createdAt||'2026'}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="profile-stats-row">
+      <div class="profile-stat-box">
+        <div class="profile-stat-val" style="color:var(--blue);">${myOrders.length}</div>
+        <div class="profile-stat-lbl">Total Orders</div>
+      </div>
+      <div class="profile-stat-box">
+        <div class="profile-stat-val" style="color:var(--green);">${delivered}</div>
+        <div class="profile-stat-lbl">Delivered</div>
+      </div>
+      <div class="profile-stat-box">
+        <div class="profile-stat-val" style="color:var(--orange);">₹${totalSpent}</div>
+        <div class="profile-stat-lbl">Total Spent</div>
+      </div>
+    </div>
+
+    <!-- Personal Info -->
+    <div class="profile-section">
+      <div class="profile-section-title">👤 Personal Information</div>
+      <div class="profile-info-grid">
+        <div class="profile-info-item">
+          <div class="profile-info-label">Full Name</div>
+          <div class="profile-info-value">${currentUser.name}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Email Address</div>
+          <div class="profile-info-value">${currentUser.email}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Phone Number</div>
+          <div class="profile-info-value">${currentUser.phone||'Not added'}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Member Since</div>
+          <div class="profile-info-value">${currentUser.createdAt||'2026'}</div>
+        </div>
+        <div class="profile-info-item" style="grid-column:1/-1;">
+          <div class="profile-info-label">Delivery Address</div>
+          <div class="profile-info-value">${currentUser.address||'No address saved yet'}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="profile-section">
+      <div class="profile-section-title">Recent Orders</div>
+      ${myOrders.length===0
+        ? `<div class="empty-state" style="padding:20px 0;"><div class="es-icon">📦</div><p>No orders yet. Start shopping!</p></div>`
+        : myOrders.slice(0,3).map(o=>{
+            const statusMap={processing:{label:'⏳ Processing',cls:'badge-orange'},out_for_delivery:{label:'🚴 On the way',cls:'badge-blue'},delivered:{label:'✅ Delivered',cls:'badge-green'},cancelled:{label:'❌ Cancelled',cls:'badge-red'}};
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:3px;">#${o.id}</div>
+                <div style="font-size:12px;color:var(--text2);">${o.date} · ${o.items.length} item${o.items.length>1?'s':''}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="badge ${statusMap[o.status]?.cls||'badge-gray'}" style="font-size:11px;">${statusMap[o.status]?.label||o.status}</span>
+                <span style="font-weight:700;color:var(--green);">₹${o.total}</span>
+              </div>
+            </div>`;
+          }).join('')
+      }
+      ${myOrders.length>3?`<div style="text-align:center;padding-top:14px;"><button class="btn-primary" style="padding:8px 20px;font-size:13px;" onclick="showPage('c-orders',document.querySelector('.nav-item[data-page=c-orders]'))">View All Orders</button></div>`:''}
+    </div>
+
+    <!-- Logout -->
+    <button class="mobile-logout-btn" onclick="doLogout()">🚪 Log Out</button>
+  `;
+}
+
+// ── VENDOR HOME ───────────────────────────────────────────────
+function renderVendorHome() {
+  const myProducts = db.products.filter(p=>p.vendorId===currentUser.id);
+  const myOrders   = db.orders.filter(o=>o.vendorId===currentUser.id);
+  const revenue    = myOrders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  document.getElementById('vendor-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" style="color:var(--green);">${myProducts.length}</div><div class="stat-label">Products</div></div>
+    <div class="stat-card"><div class="stat-icon">🧾</div><div class="stat-value" style="color:var(--orange);">${myOrders.length}</div><div class="stat-label">Orders</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--blue);">${myOrders.filter(o=>o.status==='delivered').length}</div><div class="stat-label">Delivered</div></div>
+    <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" style="color:var(--green);">₹${revenue}</div><div class="stat-label">Revenue</div></div>
+  `;
+  const el = document.getElementById('vendor-products-list');
+  if (!myProducts.length) { el.innerHTML=`<div class="empty-state"><div class="es-icon">📦</div><p>No products yet. Add your first product!</p></div>`; return; }
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Photos</th><th>Action</th></tr></thead>
+    <tbody>
+    ${myProducts.map(p=>`<tr>
+      <td style="display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:40px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;">${(p.photos&&p.photos[0])?`<img src="${p.photos[0]}" style="width:100%;height:100%;object-fit:cover;">`:p.emoji}</div>
+        <span>${p.name}</span>
+      </td>
+      <td><span class="badge badge-green">${p.category}</span></td>
+      <td>₹${p.price}</td>
+      <td>${(p.photos||[]).filter(Boolean).length}/3 📷</td>
+      <td><button class="btn-danger" onclick="vendorDeleteProduct('${p.id}')">Delete</button></td>
+    </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function vendorDeleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  try {
+    await apiFetch('/api/products/'+id, { method:'DELETE' });
+    db.products = db.products.filter(p=>p.id!==id);
+    showToast('🗑️ Product deleted'); renderVendorHome();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+function renderVendorOrders() {
+  const orders = db.orders.filter(o=>o.vendorId===currentUser.id);
+  const statusMap = { processing:{label:'⏳ Processing',cls:'badge-orange'}, out_for_delivery:{label:'🚴 Out for Delivery',cls:'badge-blue'}, delivered:{label:'✅ Delivered',cls:'badge-green'}, cancelled:{label:'❌ Cancelled',cls:'badge-red'} };
+  const el = document.getElementById('vendor-orders-list');
+  if (!orders.length) { el.innerHTML=`<div class="empty-state"><div class="es-icon">🧾</div><p>No orders yet</p></div>`; return; }
+  el.innerHTML = orders.map(o=>`
+    <div class="order-card">
+      <div class="order-header"><span class="order-id">#${o.id}</span><span class="badge ${statusMap[o.status]?.cls||'badge-gray'}">${statusMap[o.status]?.label||o.status}</span></div>
+      <div class="order-meta">${o.date} · 👤 ${o.customerName} · 📞 ${o.customerPhone||'N/A'}</div>
+      <div class="order-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty}`).join(' · ')}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:6px;">📍 ${o.customerAddress}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:16px;font-weight:700;color:var(--green);">₹${o.total}</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${o.status==='processing'?`<button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="updateOrderStatus('${o.id}','out_for_delivery')">Mark Out for Delivery</button>`:''}
+          ${o.status==='out_for_delivery'?`<button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="updateOrderStatus('${o.id}','delivered')">Mark Delivered</button>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function updateOrderStatus(orderId, status) {
+  try {
+    await apiFetch('/api/orders/'+orderId+'/status', { method:'PATCH', body: JSON.stringify({ status }) });
+    const o = db.orders.find(x=>x.id===orderId);
+    if (o) o.status = status;
+    showToast('Order status updated'); renderVendorOrders();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+function renderVendorProfile() {
+  const myProducts = db.products.filter(p=>p.vendorId===currentUser.id);
+  const myOrders   = db.orders.filter(o=>o.vendorId===currentUser.id);
+  const revenue    = myOrders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  const initials   = (currentUser.storeName||currentUser.name).split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const avatarHtml = currentUser.profilePic
+    ? `<img src="${currentUser.profilePic}" alt="avatar">`
+    : initials;
+
+  document.getElementById('vendor-profile-info').innerHTML = `
+    <!-- Hero -->
+    <div class="profile-hero">
+      <div class="profile-avatar-big vendor-av">${avatarHtml}</div>
+      <div class="profile-hero-info">
+        <div class="profile-hero-name">${currentUser.storeName||currentUser.name}</div>
+        <div class="profile-hero-sub">${currentUser.location||'Location not set'}</div>
+        <div class="profile-hero-tags">
+          <span class="profile-tag">🏪 Vendor</span>
+          ${currentUser.category?`<span class="profile-tag">🏷️ ${currentUser.category}</span>`:''}
+          <span class="profile-tag ${currentUser.vendorStatus==='approved'?'':'badge-orange'}" style="${currentUser.vendorStatus==='approved'?'background:rgba(46,168,106,0.2);color:#6ee7b7;border-color:rgba(46,168,106,0.3);':''}">${currentUser.vendorStatus==='approved'?'✅ Approved':'⏳ Pending'}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="profile-stats-row">
+      <div class="profile-stat-box">
+        <div class="profile-stat-val" style="color:var(--green);">${myProducts.length}</div>
+        <div class="profile-stat-lbl">Products</div>
+      </div>
+      <div class="profile-stat-box">
+        <div class="profile-stat-val" style="color:var(--blue);">${myOrders.length}</div>
+        <div class="profile-stat-lbl">Orders</div>
+      </div>
+      <div class="profile-stat-box">
+        <div class="profile-stat-val" style="color:var(--orange);">₹${revenue}</div>
+        <div class="profile-stat-lbl">Revenue</div>
+      </div>
+    </div>
+
+    <!-- Store Info -->
+    <div class="profile-section">
+      <div class="profile-section-title">🏪 Store Information</div>
+      <div class="profile-info-grid">
+        <div class="profile-info-item">
+          <div class="profile-info-label">Store Name</div>
+          <div class="profile-info-value">${currentUser.storeName||'—'}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Owner Name</div>
+          <div class="profile-info-value">${currentUser.name}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Email</div>
+          <div class="profile-info-value">${currentUser.email}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Phone</div>
+          <div class="profile-info-value">${currentUser.phone||'Not added'}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Location</div>
+          <div class="profile-info-value">${currentUser.location||'Not set'}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Category</div>
+          <div class="profile-info-value">${currentUser.category||'Not set'}</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Account Status</div>
+          <div class="profile-info-value"><span class="badge ${currentUser.vendorStatus==='approved'?'badge-green':'badge-orange'}">${currentUser.vendorStatus}</span></div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Member Since</div>
+          <div class="profile-info-value">${currentUser.createdAt||'2026'}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Products -->
+    <div class="profile-section">
+      <div class="profile-section-title" style="justify-content:space-between;">
+        <span>My Products (${myProducts.length})</span>
+        <button class="btn-primary" style="font-size:12px;padding:6px 14px;" onclick="openAddProduct()">+ Add</button>
+      </div>
+      ${myProducts.length===0
+        ? `<div class="empty-state" style="padding:20px 0;"><div class="es-icon">📦</div><p>No products yet. Add your first product!</p></div>`
+        : myProducts.slice(0,5).map(p=>`
+          <div class="vendor-product-item">
+            <div class="vp-thumb">${(p.photos&&p.photos[0])?`<img src="${p.photos[0]}" alt="${p.name}">`:(p.emoji||'📦')}</div>
+            <div class="vp-info">
+              <div class="vp-name">${p.name}</div>
+              <div class="vp-meta">${p.category||''} · ${p.unit||''}</div>
+            </div>
+            <div class="vp-price">₹${p.price}</div>
+          </div>`).join('')
+      }
+      ${myProducts.length>5?`<div style="text-align:center;padding-top:14px;"><button class="btn-primary" style="padding:8px 20px;font-size:13px;" onclick="showPage('v-home',document.querySelector('.nav-item[data-page=v-home]'))">View All Products</button></div>`:''}
+    </div>
+
+    <!-- Logout -->
+    <button class="mobile-logout-btn" onclick="doLogout()">🚪 Log Out</button>
+  `;
+}
+
+// ── VENDOR ADD PRODUCT ────────────────────────────────────────
+function openAddProduct() {
+  if (currentUser.vendorStatus!=='approved') { showToast('Account not approved yet'); return; }
+  productPhotos=['','',''];
+  ['photo-slot-0','photo-slot-1','photo-slot-2'].forEach(id=>{
+    const slot=document.getElementById(id);
+    slot.innerHTML=`<span class="add-photo-icon">📷</span><div class="photo-remove" onclick="removePhoto(event,${id.split('-')[2]})">✕</div>`;
+  });
+  ['p-name','p-price','p-mrp','p-unit','p-emoji','p-desc','p-brand','p-stock','p-highlights'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  updateProductSubcategories();
+  openModal('add-product-modal');
+}
+
+function updateProductSubcategories() {
+  const cat   = document.getElementById('p-cat').value;
+  const subcat= document.getElementById('p-subcat');
+  const subs  = CATEGORIES[cat]?.subcategories||[];
+  subcat.innerHTML = subs.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+function triggerPhotoUpload(slotIndex) {
+  currentUploadSlot=slotIndex;
+  document.getElementById('p-photo-input').click();
+}
+
+function handlePhotoUpload(event) {
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const dataUrl=e.target.result;
+    productPhotos[currentUploadSlot]=dataUrl;
+    const slot=document.getElementById('photo-slot-'+currentUploadSlot);
+    slot.innerHTML=`<img src="${dataUrl}" alt="Photo ${currentUploadSlot+1}"><div class="photo-remove" onclick="removePhoto(event,${currentUploadSlot})">✕</div>`;
+    event.target.value='';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto(e, slotIndex) {
+  e.stopPropagation(); productPhotos[slotIndex]='';
+  const slot=document.getElementById('photo-slot-'+slotIndex);
+  slot.innerHTML=`<span class="add-photo-icon">📷</span><div class="photo-remove" onclick="removePhoto(event,${slotIndex})">✕</div>`;
+}
+
+async function submitProduct() {
+  const name  = document.getElementById('p-name').value.trim();
+  const price = parseFloat(document.getElementById('p-price').value);
+  const unit  = document.getElementById('p-unit').value.trim();
+  if (!name||!price||!unit) { showToast('Fill required fields: Name, Price, Unit'); return; }
+
+  const body = {
+    name, price,
+    mrp:      parseFloat(document.getElementById('p-mrp').value)||price,
+    unit,
+    emoji:    document.getElementById('p-emoji').value||'📦',
+    brand:    document.getElementById('p-brand').value.trim(),
+    stock:    parseInt(document.getElementById('p-stock').value)||0,
+    desc:     document.getElementById('p-desc').value.trim(),
+    highlights: document.getElementById('p-highlights').value.split(',').map(h=>h.trim()).filter(Boolean),
+    category:   document.getElementById('p-cat').value,
+    subcategory:document.getElementById('p-subcat').value,
+    photos:     productPhotos.filter(Boolean)
+  };
+
+  try {
+    const product = await apiFetch('/api/products', { method:'POST', body: JSON.stringify(body) });
+    db.products.unshift(product);
+    closeModal('add-product-modal');
+    showToast('Product uploaded successfully!');
+    renderVendorHome();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+// ── ADMIN ──────────────────────────────────────────────────────
+function renderAdminHome() {
+  const totalRevenue = db.orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" style="color:var(--blue);">${db.users.filter(u=>u.role==='customer').length}</div><div class="stat-label">Customers</div></div>
+    <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-value" style="color:var(--orange);">${db.users.filter(u=>u.role==='vendor'&&u.vendorStatus==='approved').length}</div><div class="stat-label">Active Vendors</div></div>
+    <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" style="color:var(--green);">${db.products.length}</div><div class="stat-label">Products</div></div>
+    <div class="stat-card"><div class="stat-icon">🧾</div><div class="stat-value" style="color:var(--purple);">${db.orders.length}</div><div class="stat-label">Total Orders</div></div>
+    <div class="stat-card"><div class="stat-icon"></div><div class="stat-value" style="color:var(--green);">₹${totalRevenue}</div><div class="stat-label">Revenue</div></div>
+    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--amber);">${db.users.filter(u=>u.role==='vendor'&&u.vendorStatus==='pending').length}</div><div class="stat-label">Pending Vendors</div></div>
+  `;
+  renderFeedbackList('admin-feedback-preview', db.feedback.slice(0,3));
+}
+
+function renderAdminUsers() {
+  const el = document.getElementById('admin-users-list');
+  const users = db.users.filter(u=>u.role!=='admin');
+  if (!users.length) { el.innerHTML=`<div class="empty-state"><div class="es-icon">👥</div><p>No users yet</p></div>`; return; }
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Name</th><th>Contact</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    ${users.map(u=>`<tr class="${u.status==='blocked'?'user-row-blocked':''}">
+      <td><strong>${u.name}</strong>${u.storeName?`<br><span style="font-size:11px;color:var(--text3);">🏪 ${u.storeName}</span>`:''}</td>
+      <td style="font-size:12px;">📧 ${u.email}<br>📞 ${u.phone||'N/A'}</td>
+      <td>
+        <span class="badge ${u.role==='vendor'?'badge-orange':'badge-blue'}">${u.role==='vendor'?'🏪 Vendor':'🛒 Customer'}</span>
+        ${u.role==='vendor'?`<br><span class="badge ${u.vendorStatus==='approved'?'badge-green':'badge-gray'}" style="margin-top:4px;">${u.vendorStatus}</span>`:''}
+      </td>
+      <td><span class="badge ${u.status==='blocked'?'badge-red':'badge-green'}">${u.status==='blocked'?'🚫 Blocked':'✅ Active'}</span></td>
+      <td>
+        ${u.status==='blocked'
+          ?`<button class="btn-unblock" onclick="changeUserStatus('${u.id}','active')">Unblock</button>`
+          :`<button class="btn-block"   onclick="changeUserStatus('${u.id}','blocked')">Block</button>`}
+        <button class="btn-danger" style="margin-left:4px;" onclick="deleteUser('${u.id}')">Delete</button>
+      </td>
+    </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function changeUserStatus(id, status) {
+  try {
+    await apiFetch('/api/users/'+id+'/status', { method:'PATCH', body: JSON.stringify({ status }) });
+    const u = db.users.find(x=>x.id===id);
+    if (u) u.status = status;
+    showToast(status==='blocked'?'🚫 User blocked':'✅ User unblocked');
+    renderAdminUsers();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  try {
+    await apiFetch('/api/users/'+id, { method:'DELETE' });
+    db.users    = db.users.filter(u=>u.id!==id);
+    db.products = db.products.filter(p=>p.vendorId!==id);
+    showToast('🗑️ User deleted'); renderAdminUsers();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+function renderVendorApprovals() {
+  const pending  = db.users.filter(u=>u.role==='vendor'&&u.vendorStatus==='pending');
+  const approved = db.users.filter(u=>u.role==='vendor'&&u.vendorStatus==='approved');
+  document.getElementById('pending-count').textContent = pending.length+' pending';
+  document.getElementById('pending-vendors').innerHTML = pending.length
+    ? pending.map(v=>`
+      <div class="pending-vendor-card">
+        <div class="vendor-info">
+          <h4>${v.storeName||v.name}</h4>
+          <p>👤 ${v.name} · 📧 ${v.email} · 📞 ${v.phone}</p>
+          <p>📍 ${v.location} · 🏷️ ${v.category}</p>
+        </div>
+        <div class="action-btns">
+          <button class="btn-approve" onclick="changeVendorStatus('${v.id}','approved')">✅ Approve</button>
+          <button class="btn-danger"  onclick="changeVendorStatus('${v.id}','rejected')">❌ Reject</button>
+        </div>
+      </div>`).join('')
+    : `<div class="empty-state" style="padding:24px;"><div class="es-icon">✅</div><p>No pending approvals</p></div>`;
+
+  document.getElementById('approved-vendors-list').innerHTML = approved.length
+    ? `<div class="table-responsive"><table class="data-table">
+        <thead><tr><th>Store</th><th>Owner</th><th>Contact</th><th>Location</th><th>Products</th><th>Status</th></tr></thead>
+        <tbody>
+          ${approved.map(v=>`<tr>
+            <td><strong>${v.storeName}</strong></td><td>${v.name}</td>
+            <td style="font-size:12px;">📧 ${v.email}<br>📞 ${v.phone}</td>
+            <td>${v.location}</td>
+            <td>${db.products.filter(p=>p.vendorId===v.id).length}</td>
+            <td><span class="badge ${v.status==='blocked'?'badge-red':'badge-green'}">${v.status}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`
+    : `<div class="empty-state" style="padding:24px;"><p>No approved vendors</p></div>`;
+}
+
+async function changeVendorStatus(id, vendorStatus) {
+  if (vendorStatus==='rejected'&&!confirm('Reject and delete this vendor?')) return;
+  try {
+    await apiFetch('/api/users/'+id+'/vendor-status', { method:'PATCH', body: JSON.stringify({ vendorStatus }) });
+    if (vendorStatus==='rejected') db.users = db.users.filter(u=>u.id!==id);
+    else { const u=db.users.find(x=>x.id===id); if(u) u.vendorStatus=vendorStatus; }
+    showToast(vendorStatus==='approved'?'✅ Vendor approved!':'❌ Vendor rejected');
+    renderVendorApprovals();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+function renderAdminProducts() {
+  const el = document.getElementById('admin-products-list');
+  if (!db.products.length) { el.innerHTML=`<div class="empty-state"><div class="es-icon">📦</div><p>No products yet</p></div>`; return; }
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Product</th><th>Vendor</th><th>Category</th><th>Price</th><th>Photos</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+    ${db.products.map(p=>{
+      const vendor=getUserById(p.vendorId);
+      const mainPhoto=(p.photos&&p.photos[0])||p.image||'';
+      return `<tr>
+        <td style="display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;">${mainPhoto?`<img src="${mainPhoto}" style="width:100%;height:100%;object-fit:cover;">`:p.emoji}</div>
+          <span>${p.name}</span>
+        </td>
+        <td>${vendor?.storeName||vendor?.name||'Unknown'}</td>
+        <td><span class="badge badge-green">${p.category}</span></td>
+        <td>₹${p.price}</td>
+        <td>${(p.photos||[]).filter(Boolean).length}/3 📷</td>
+        <td><span class="badge ${p.status==='active'?'badge-green':'badge-red'}">${p.status}</span></td>
+        <td><button class="btn-danger" onclick="adminDeleteProduct('${p.id}')">Delete</button></td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function adminDeleteProduct(id) {
+  if (!confirm('Delete?')) return;
+  try {
+    await apiFetch('/api/products/'+id, { method:'DELETE' });
+    db.products = db.products.filter(p=>p.id!==id);
+    showToast('🗑️ Product deleted'); renderAdminProducts();
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+function renderAdminOrders() {
+  const el = document.getElementById('admin-orders-list');
+  if (!db.orders.length) { el.innerHTML=`<div class="empty-state"><div class="es-icon">🧾</div><p>No orders yet</p></div>`; return; }
+  const statusMap = { processing:'badge-orange', out_for_delivery:'badge-blue', delivered:'badge-green', cancelled:'badge-red' };
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Order</th><th>Customer</th><th>Vendor</th><th>Items</th><th>Billing</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+    ${db.orders.map(o=>`<tr>
+      <td><strong>${o.id}</strong><br><span style="font-size:11px;color:var(--text3);">${o.date}</span></td>
+      <td><strong>${o.customerName}</strong><br><span style="font-size:11px;color:var(--text2);">📞 ${o.customerPhone||'N/A'}</span></td>
+      <td>${o.vendorName}</td>
+      <td style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;">${o.items.map(i=>`${i.emoji}${i.name}×${i.qty}`).join(', ')}</td>
+      <td style="font-size:12px;">Sub: ₹${o.subtotal||o.total}<br>Del: ${(o.delivery||0)===0?'Free':'₹'+(o.delivery||0)}<br>${o.discount>0?`Disc: −₹${o.discount}<br>`:''}<strong>₹${o.total}</strong></td>
+      <td><span class="badge ${statusMap[o.status]||'badge-gray'}">${o.status.replace('_',' ')}</span></td>
+      <td><button class="btn-primary" style="padding:6px 12px;font-size:11px;" onclick="viewOrderDetails('${o.id}')">View</button></td>
+    </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function renderAdminFeedback() { renderFeedbackList('admin-all-feedback', db.feedback.slice().reverse()); }
+
+// ── DELIVERY SETTINGS ─────────────────────────────────────────
+function renderDeliverySettings() {
+  const s = getSettings();
+  document.getElementById('base-delivery-charge').value    = s.baseDeliveryCharge;
+  document.getElementById('free-delivery-above').value     = s.freeDeliveryAbove;
+  document.getElementById('express-delivery-charge').value = s.expressDeliveryCharge;
+  renderCouponsList();
+}
+
+async function saveDeliverySettings() {
+  const body = {
+    baseDeliveryCharge:    parseFloat(document.getElementById('base-delivery-charge').value)||20,
+    freeDeliveryAbove:     parseFloat(document.getElementById('free-delivery-above').value)||200,
+    expressDeliveryCharge: parseFloat(document.getElementById('express-delivery-charge').value)||40
+  };
+  try {
+    await apiFetch('/api/settings', { method:'PUT', body: JSON.stringify(body) });
+    Object.assign(db.settings, body);
+    showToast('💾 Delivery settings saved!');
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+async function addCoupon() {
+  const code     = document.getElementById('new-coupon-code').value.trim().toUpperCase();
+  const discount = parseInt(document.getElementById('new-coupon-discount').value);
+  const minOrder = parseInt(document.getElementById('new-coupon-min').value)||0;
+  if (!code||!discount) { showToast('Fill coupon code and discount'); return; }
+  try {
+    const result = await apiFetch('/api/settings/coupons', { method:'POST', body: JSON.stringify({ code, discount, minOrder }) });
+    db.settings.coupons = result.coupons;
+    renderCouponsList(); showToast('Coupon added!');
+    document.getElementById('new-coupon-code').value='';
+    document.getElementById('new-coupon-discount').value='';
+    document.getElementById('new-coupon-min').value='';
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+function renderCouponsList() {
+  const s = getSettings();
+  const el = document.getElementById('coupons-list');
+  if (!s.coupons||!s.coupons.length) { el.innerHTML=`<div class="empty-state" style="padding:20px;"><p>No coupons yet</p></div>`; return; }
+  el.innerHTML = s.coupons.map(c=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <span class="badge badge-green" style="font-size:13px;font-weight:800;">${c.code}</span>
+        <span style="font-size:13px;margin-left:10px;">${c.discount}% off · Min ₹${c.minOrder}</span>
+      </div>
+      <button class="btn-danger" onclick="deleteCoupon('${c.code}')">Delete</button>
+    </div>
+  `).join('');
+}
+
+async function deleteCoupon(code) {
+  try {
+    const result = await apiFetch('/api/settings/coupons/'+code, { method:'DELETE' });
+    db.settings.coupons = result.coupons;
+    renderCouponsList(); showToast('🗑️ Coupon deleted');
+  } catch(e) { showToast(''+(e.message||'Error')); }
+}
+
+// ── ORDER DETAILS ─────────────────────────────────────────────
+function viewOrderDetails(orderId) {
+  const o = db.orders.find(o=>o.id===orderId); if(!o) return;
+  const statusMap = { processing:{label:'⏳ Processing',cls:'badge-orange'}, out_for_delivery:{label:'🚴 Out for Delivery',cls:'badge-blue'}, delivered:{label:'✅ Delivered',cls:'badge-green'}, cancelled:{label:'❌ Cancelled',cls:'badge-red'} };
+  const isAdmin = currentUser?.role === 'admin';
+  document.getElementById('view-order-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div><div style="font-size:20px;font-weight:700;">#${o.id}</div><div style="font-size:13px;color:var(--text2);">${o.date}</div></div>
+      <span class="badge ${statusMap[o.status]?.cls||'badge-gray'}" id="order-status-badge">${statusMap[o.status]?.label||o.status}</span>
+    </div>
+    ${isAdmin ? `
+    <div style="background:var(--green-light);border:1.5px solid var(--green-mid);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--green);">🔄 Update Order Status</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <select id="status-change-select" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--white);cursor:pointer;outline:none;min-width:160px;">
+          <option value="processing" ${o.status==='processing'?'selected':''}>⏳ Processing</option>
+          <option value="out_for_delivery" ${o.status==='out_for_delivery'?'selected':''}>🚴 Out for Delivery</option>
+          <option value="delivered" ${o.status==='delivered'?'selected':''}>✅ Delivered</option>
+          <option value="cancelled" ${o.status==='cancelled'?'selected':''}>❌ Cancelled</option>
+        </select>
+        <button class="btn-primary" style="padding:9px 20px;font-size:13px;" onclick="updateOrderStatus('${o.id}')">Update →</button>
+      </div>
+    </div>` : ''}
+    <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px;">📦 Items</div>
+      ${o.items.map(i=>`<div class="billing-row"><span>${i.emoji} ${i.name} ×${i.qty}</span><span>₹${i.price*i.qty}</span></div>`).join('')}
+    </div>
+    <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px;">💰 Billing</div>
+      <div class="billing-row"><span>Subtotal</span><span>₹${o.subtotal||o.total}</span></div>
+      <div class="billing-row"><span>Delivery</span><span>${(o.delivery||0)===0?'Free':'₹'+(o.delivery||0)}</span></div>
+      ${o.discount>0?`<div class="billing-row" style="color:var(--green);"><span>Discount${o.coupon?' ('+o.coupon+')':''}</span><span>−₹${o.discount}</span></div>`:''}
+      <div class="billing-row" style="font-size:16px;font-weight:800;"><span>Total</span><span style="color:var(--green);">₹${o.total}</span></div>
+    </div>
+    <div style="background:var(--bg);border-radius:12px;padding:14px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px;">📍 Delivery Info</div>
+      <div style="font-size:13px;color:var(--text2);">👤 ${o.customerName} · 📞 ${o.customerPhone||'N/A'}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;">📍 ${o.customerAddress}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;">🏪 ${o.vendorName}</div>
+    </div>
+  `;
+  openModal('view-order-modal');
+}
+
+async function updateOrderStatus(orderId) {
+  const newStatus = document.getElementById('status-change-select').value;
+  try {
+    await apiFetch('/api/orders/'+orderId+'/status', {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus })
+    });
+    // Update local db
+    const idx = db.orders.findIndex(o=>o.id===orderId);
+    if (idx !== -1) db.orders[idx].status = newStatus;
+    showToast('Order status updated!');
+    closeModal('view-order-modal');
+    renderAdminOrders();
+  } catch(e) { showToast(''+(e.message||'Failed to update status')); }
+}
+
+// ============================================================
+// FIREBASE OTP — Register + Forgot Password
+// ============================================================
+
+const fbAuth = firebase.auth();
+// ── REGISTER: direct (no OTP) ─────────────────────────────────
+function onRoleChange(role) {
+  document.getElementById('customer-extra').style.display = role === 'customer' ? 'block' : 'none';
+  document.getElementById('vendor-extra').style.display   = role === 'vendor'   ? 'block' : 'none';
+}
+
+// ── FORGOT PASSWORD: email-based direct reset ──────────────────
+function openForgotPassword() {
+  const emailEl = document.getElementById('fp-email');
+  const np = document.getElementById('fp-new-password');
+  const cp = document.getElementById('fp-confirm-password');
+  const err = document.getElementById('fp-error');
+  if (emailEl) emailEl.value = '';
+  if (np) np.value = '';
+  if (cp) cp.value = '';
+  if (err) err.classList.remove('show');
+  openModal('forgot-modal');
+}
+
+function closeForgotPassword() {
+  closeModal('forgot-modal');
+}
+
+async function resetPasswordDirect() {
+  const email   = document.getElementById('fp-email').value.trim().toLowerCase();
+  const newPwd  = document.getElementById('fp-new-password').value;
+  const conPwd  = document.getElementById('fp-confirm-password').value;
+  const errEl   = document.getElementById('fp-error');
+  errEl.classList.remove('show');
+
+  if (!email) { errEl.textContent = 'Please enter your email address'; errEl.classList.add('show'); return; }
+  if (!newPwd || newPwd.length < 6) { errEl.textContent = 'Password must be at least 6 characters'; errEl.classList.add('show'); return; }
+  if (newPwd !== conPwd) { errEl.textContent = 'Passwords do not match'; errEl.classList.add('show'); return; }
+
+  try {
+    const data = await apiFetch('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, newPassword: newPwd })
+    });
+    authToken = data.token;
+    localStorage.setItem('gm_token', authToken);
+    currentUser = data.user;
+    await loadSnapshot();
+    closeForgotPassword();
+    showToast('Password updated. You are now logged in.');
+    enterApp();
+  } catch(e) {
+    errEl.textContent = e.message || 'Could not reset password. Check your email and try again.';
+    errEl.classList.add('show');
+  }
+}
+
+// ── AUTO-LOGIN ON LOAD ────────────────────────────────────────
+async function tryAutoLogin() {
+  if (!authToken) return;
+  try {
+    const data = await apiFetch('/api/auth/me');
+    currentUser = data.user;
+    await loadSnapshot();
+    enterApp();
+  } catch(e) {
+    authToken = null;
+    localStorage.removeItem('gm_token');
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateProductSubcategories();
+  updateCartUI();
+  if (window.innerWidth<=768) document.getElementById('hamburger').style.display='flex';
+  window.addEventListener('resize', ()=>{
+    const h=document.getElementById('hamburger');
+    if(window.innerWidth<=768) h.style.display='flex';
+    else { h.style.display='none'; document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('show'); }
+  });
+  tryAutoLogin();
+});
+</script>
+</body>
+</html>
