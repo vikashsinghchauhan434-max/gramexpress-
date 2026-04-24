@@ -1,2 +1,5 @@
-[phases.install]
-cmds = ["npm install"]
+[build]
+builder = "nixpacks"
+
+[build.nixpacks]
+buildCmd = "npm install"
