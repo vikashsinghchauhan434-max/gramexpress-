@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GramExpress — Town to Village</title>
+
+    <!-- Firebase CDN (Compat version - window.firebase ke liye zaroori) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyB_cfDAj_hkah5-xEFTTrDRBV1DE21ioA8",
+        authDomain: "gramexpress-e2b24.firebaseapp.com",
+        projectId: "gramexpress-e2b24",
+        storageBucket: "gramexpress-e2b24.firebasestorage.app",
+        messagingSenderId: "63109597753",
+        appId: "1:63109597753:web:9a2edf84e9db306b2b9be8"
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
