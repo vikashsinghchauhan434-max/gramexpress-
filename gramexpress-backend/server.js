@@ -74,7 +74,6 @@ const OrderSchema = new mongoose.Schema({
   _id:             { type: String, default: () => 'ORD' + String(Date.now()).slice(-6) + Math.random().toString(36).slice(2,5).toUpperCase() },
   customerId:      String,
   customerName:    String,
-  // ✅ FIXED: customerPhone properly saved
   customerPhone:   { type: String, default: '' },
   customerAddress: String,
   vendorId:        String,
@@ -118,20 +117,8 @@ const upload = multer({ storage, limits: { fileSize: 5*1024*1024 }, fileFilter: 
 
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '20mb' }));
-app.use('/uploads', express.static(UPLOADS_DIR));
-const PUBLIC_DIR = path.join(__dirname, 'public');
-app.use(express.static(PUBLIC_DIR));
+app.use('/uploads', express.static(UPLOADS_DIR)); // ✅ sirf uploads serve hoga
 
-// Serve React frontend build
-const FRONTEND_DIST = path.join(__dirname, '../frontend/becho/dist');
-if (require('fs').existsSync(FRONTEND_DIST)) {
-  app.use(express.static(FRONTEND_DIST));
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
-      res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
-    }
-  });
-}
 app.get('/', (_req, res) => res.json({ status: 'ok', message: 'GramExpress API is running' }));
 
 async function getSettingVal(key) { const row = await Setting.findOne({ key }); return row ? row.value : null; }
@@ -257,8 +244,6 @@ app.get('/api/snapshot', authMiddleware, async (req, res) => {
       getSettingVal('coupons'),
     ]);
 
-    // Helper only gets vendors list + all orders (no customer private details stripped from orders)
-    // but user list is limited to vendors only (not customer emails/addresses)
     const usersForRole = (role === 'helper')
       ? allUsers.filter(u => u.role === 'vendor' || u.role === 'helper')
       : allUsers;
@@ -333,7 +318,7 @@ app.delete('/api/products/:id', authMiddleware, requireRole('vendor','admin'), a
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── ORDERS — ✅ FIXED: phone properly saved ───────────────────
+// ── ORDERS ────────────────────────────────────────────────────
 app.post('/api/orders', authMiddleware, requireRole('customer','admin'), async (req, res) => {
   try {
     const { items, address, deliveryType, couponCode, phone } = req.body;
@@ -346,7 +331,6 @@ app.post('/api/orders', authMiddleware, requireRole('customer','admin'), async (
       getSettingVal('coupons'),
     ]);
 
-    // ✅ Save phone + address to customer profile
     await User.findByIdAndUpdate(req.user.id, { address, phone });
 
     const groups = {};
@@ -381,7 +365,7 @@ app.post('/api/orders', authMiddleware, requireRole('customer','admin'), async (
       const order = await Order.create({
         customerId:      req.user.id,
         customerName:    customer.name,
-        customerPhone:   phone,          // ✅ phone from request body
+        customerPhone:   phone,
         customerAddress: address,
         vendorId,
         vendorName:      vendor?.storeName || vendor?.name || 'Vendor',
