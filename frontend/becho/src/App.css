@@ -409,6 +409,9 @@ body {
 .su-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .su-avatar.admin-av { background: linear-gradient(135deg, #6a1b9a, #9c27b0); }
 .su-avatar.vendor-av { background: linear-gradient(135deg, #f57c00, #ff9800); }
+.su-avatar.helper-av { background: linear-gradient(135deg, #1565c0, #1976d2); }
+
+.badge-helper { background: rgba(21,101,192,0.2); color: #64b5f6; border: 1px solid rgba(25,118,210,0.4); }
 
 .su-info { min-width: 0; }
 .su-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -527,20 +530,20 @@ body {
 ══════════════════════════════════════════════════════════════════════ */
 .cart-float {
   position: fixed;
-  bottom: 80px;
-  right: 20px;
+  top: 16px;
+  right: 24px;
   background: var(--green);
   color: #fff;
-  padding: 12px 20px;
+  padding: 14px 26px;
   border-radius: 50px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 10px;
+  font-size: 17px;
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(46,125,50,0.4);
-  z-index: 700;
+  z-index: 1100;
   transition: transform 0.2s;
 }
 
@@ -549,13 +552,13 @@ body {
 .cart-count {
   background: #fff;
   color: var(--green);
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
 }
 
@@ -612,6 +615,26 @@ body {
   overflow-y: auto;
   color: #fff;
 }
+
+/* Fix white backgrounds inside dark modals */
+.modal .order-card,
+.modal [style*="background: var(--bg)"],
+.modal [style*="background:var(--bg)"],
+.modal [style*="background: var(--white)"],
+.modal [style*="background:var(--white)"] {
+  background: rgba(255,255,255,0.07) !important;
+  color: #fff !important;
+}
+
+.modal-inner-section {
+  background: rgba(255,255,255,0.07) !important;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.modal-inner-section .billing-row { color: rgba(255,255,255,0.85); }
+.modal-inner-section .billing-row span { color: rgba(255,255,255,0.85); }
 
 .modal-title {
   display: flex;

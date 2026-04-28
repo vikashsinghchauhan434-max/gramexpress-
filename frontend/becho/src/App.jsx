@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css'
 
 // ── Constants ──────────────────────────────────────────────────────────
-const API = import.meta.env.VITE_API_URL || '';
+const API = '';   // same-origin proxy; set to your backend URL if deploying separately
 const CATEGORIES = {
   Vegetables: { icon: '🥬', subcategories: ['Leafy Greens','Root Vegetables','Tomatoes & Peppers','Onion & Garlic','Gourds','Beans & Peas','Exotic Vegetables'] },
   Fruits:     { icon: '🍎', subcategories: ['Citrus Fruits','Tropical Fruits','Berries','Apples & Pears','Melons','Dry Fruits','Seasonal Fruits'] },
@@ -11,7 +11,9 @@ const CATEGORIES = {
   Snacks:     { icon: '🍿', subcategories: ['Chips & Namkeen','Biscuits & Cookies','Chocolates','Sweets','Instant Noodles','Breakfast Items'] },
   Electronics:{ icon: '📱', subcategories: ['Mobile Accessories','Earphones','Chargers & Cables','Power Banks','LED Lights','Batteries'] },
   Clothing:   { icon: '👕', subcategories: ["Men's Wear","Women's Wear","Kids Wear","Ethnic Wear","Accessories","Footwear"] },
-  Home:       { icon: '🏠', subcategories: ['Kitchen Items','Cleaning Supplies','Storage','Decor','Tools','Gardening'] },
+  Medical:    { icon: '💊', subcategories: ['Medicines','Vitamins & Supplements','First Aid','Personal Care','Baby Care','Eye & Ear Care','Ayurvedic & Herbal','Sanitary Pads & Tampons','Condoms & Protection','Pregnancy & Fertility'] },
+  Makeup:     { icon: '💄', subcategories: ['Face Wash & Cleanser','Moisturiser & Sunscreen','Lipstick & Lip Gloss','Foundation & BB Cream','Kajal & Eyeliner','Blush & Highlighter','Nail Polish','Hair Care','Perfume & Deodorant','Skin Care Kits'] },
+  Dinner:     { icon: '🍽️', subcategories: ['Roti & Paratha','Sabzi & Curry','Dal & Khichdi','Rice & Biryani','Soup & Salad','Paneer Dishes','Non-Veg Dishes','Desserts & Sweets'] },
 };
 const STATUS_MAP = {
   processing:       { label: '⏳ Processing',       cls: 'badge-orange' },
@@ -117,6 +119,10 @@ function AuthScreen({ onLogin, onPending, onBlocked }) {
       if (!regStore || !regLocation) { setRegErr('Store name and location are required'); return; }
       body.storeName = regStore; body.location = regLocation; body.category = regVcat; body.phone = regPhone;
     }
+    if (regRole === 'helper') {
+      if (!regPhone || !/^\d{10}$/.test(regPhone.replace(/\D/g, ''))) { setRegErr('Please enter a valid 10-digit phone number'); return; }
+      body.phone = regPhone; body.address = regAddress;
+    }
     try {
       const data = await apiFetch('/api/auth/register', { method: 'POST', body: JSON.stringify(body) });
       if (data.status === 'pending') { onPending(regEmail); return; }
@@ -203,6 +209,7 @@ function AuthScreen({ onLogin, onPending, onBlocked }) {
                 <option value="">— Select your role —</option>
                 <option value="customer">Customer — I want to buy products</option>
                 <option value="vendor">Vendor — I want to sell products</option>
+                <option value="helper">Helper — I manage deliveries &amp; orders</option>
               </select>
               {regRole === 'customer' && (
                 <>
@@ -218,6 +225,12 @@ function AuthScreen({ onLogin, onPending, onBlocked }) {
                   <select className="auth-input" value={regVcat} onChange={e => setRegVcat(e.target.value)}>
                     {['Vegetables & Fruits','Grains & Pulses','Dairy Products','Snacks & FMCG','Electronics','Clothing','Mixed'].map(c => <option key={c}>{c}</option>)}
                   </select>
+                </>
+              )}
+              {regRole === 'helper' && (
+                <>
+                  <input className="auth-input" type="tel" placeholder="Phone number (10 digits)" value={regPhone} onChange={e => setRegPhone(e.target.value)}/>
+                  <input className="auth-input" placeholder="Your full address" value={regAddress} onChange={e => setRegAddress(e.target.value)}/>
                 </>
               )}
               <button className="auth-btn" onClick={handleRegister}>Create Account →</button>
@@ -637,6 +650,7 @@ function AdminDashboard({ db }) {
     ['🧾', db.orders.length, 'Total Orders', 'var(--purple)'],
     ['💰', '₹' + totalRevenue, 'Revenue', 'var(--green)'],
     ['⏳', db.users.filter(u => u.role === 'vendor' && u.vendorStatus === 'pending').length, 'Pending Vendors', 'var(--amber)'],
+    ['🛵', db.users.filter(u => u.role === 'helper' && u.vendorStatus === 'pending').length, 'Pending Helpers', 'var(--blue)'],
   ];
   return (
     <>
@@ -667,6 +681,12 @@ function AdminUsers({ db, token, showToast, onRefresh }) {
     catch (e) { showToast(e.message || 'Error'); }
   }
 
+  function getRoleBadge(u) {
+    if (u.role === 'vendor') return <><span className="badge badge-orange">🏪 Vendor</span><br/><span className={`badge ${u.vendorStatus === 'approved' ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 4 }}>{u.vendorStatus}</span></>;
+    if (u.role === 'helper') return <><span className="badge badge-blue">🛵 Helper</span><br/><span className={`badge ${u.vendorStatus === 'approved' ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 4 }}>{u.vendorStatus}</span></>;
+    return <span className="badge badge-green">🛒 Customer</span>;
+  }
+
   return (
     <>
       <div className="page-header"><h1>User Management</h1></div>
@@ -682,10 +702,7 @@ function AdminUsers({ db, token, showToast, onRefresh }) {
                   <tr key={u.id}>
                     <td><strong>{u.name}</strong>{u.storeName && <><br/><span style={{ fontSize: 11, color: 'var(--text3)' }}>🏪 {u.storeName}</span></>}</td>
                     <td style={{ fontSize: 12 }}>📧 {u.email}<br/>📞 {u.phone || 'N/A'}</td>
-                    <td>
-                      <span className={`badge ${u.role === 'vendor' ? 'badge-orange' : 'badge-blue'}`}>{u.role === 'vendor' ? '🏪 Vendor' : '🛒 Customer'}</span>
-                      {u.role === 'vendor' && <><br/><span className={`badge ${u.vendorStatus === 'approved' ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 4 }}>{u.vendorStatus}</span></>}
-                    </td>
+                    <td>{getRoleBadge(u)}</td>
                     <td><span className={`badge ${u.status === 'blocked' ? 'badge-red' : 'badge-green'}`}>{u.status === 'blocked' ? '🚫 Blocked' : '✅ Active'}</span></td>
                     <td>
                       {u.status === 'blocked' ? <button className="btn-unblock" onClick={() => changeStatus(u.id, 'active')}>Unblock</button> : <button className="btn-block" onClick={() => changeStatus(u.id, 'blocked')}>Block</button>}
@@ -751,6 +768,62 @@ function VendorApprovals({ db, token, showToast, onRefresh }) {
             </table>
           </div>
         ) : <div className="empty-state" style={{ padding: 24 }}><p>No approved vendors</p></div>}
+      </div>
+    </>
+  );
+}
+
+function HelperApprovals({ db, token, showToast, onRefresh }) {
+  const pending = db.users.filter(u => u.role === 'helper' && u.vendorStatus === 'pending');
+  const approved = db.users.filter(u => u.role === 'helper' && u.vendorStatus === 'approved');
+
+  async function changeHelperStatus(id, vendorStatus) {
+    if (vendorStatus === 'rejected' && !window.confirm('Reject and delete this helper?')) return;
+    try {
+      await apiFetch('/api/users/' + id + '/vendor-status', { method: 'PATCH', body: JSON.stringify({ vendorStatus }) }, token);
+      showToast(vendorStatus === 'approved' ? '✅ Helper approved!' : '❌ Helper rejected');
+      onRefresh();
+    } catch (e) { showToast(e.message || 'Error'); }
+  }
+
+  return (
+    <>
+      <div className="page-header"><h1>🛵 Helper Approvals</h1></div>
+      <div className="card">
+        <div className="card-title">Pending Helpers <span className="badge badge-blue">{pending.length} pending</span></div>
+        {pending.length ? pending.map(h => (
+          <div key={h.id} className="pending-vendor-card">
+            <div className="vendor-info">
+              <h4>🛵 {h.name}</h4>
+              <p>👤 {h.name} · 📧 {h.email} · 📞 {h.phone}</p>
+              <p>📍 {h.address || 'Address not provided'}</p>
+            </div>
+            <div className="action-btns">
+              <button className="btn-approve" onClick={() => changeHelperStatus(h.id, 'approved')}>✅ Approve</button>
+              <button className="btn-danger" onClick={() => changeHelperStatus(h.id, 'rejected')}>❌ Reject</button>
+            </div>
+          </div>
+        )) : <div className="empty-state" style={{ padding: 24 }}><div className="es-icon">✅</div><p>No pending helper approvals</p></div>}
+      </div>
+      <div className="card" style={{ marginTop: 20 }}>
+        <div className="card-title">Approved Helpers</div>
+        {approved.length ? (
+          <div className="table-responsive">
+            <table className="data-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th></tr></thead>
+              <tbody>
+                {approved.map(h => (
+                  <tr key={h.id}>
+                    <td><strong>{h.name}</strong></td>
+                    <td style={{ fontSize: 12 }}>📧 {h.email}</td>
+                    <td style={{ fontSize: 12 }}>📞 {h.phone || 'N/A'}</td>
+                    <td style={{ fontSize: 12 }}>📍 {h.address || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : <div className="empty-state" style={{ padding: 24 }}><p>No approved helpers</p></div>}
       </div>
     </>
   );
@@ -1186,6 +1259,9 @@ function ViewOrderModal({ open, onClose, orderId, db, currentUser, token, showTo
   useEffect(() => { if (o) setSelStatus(o.status); }, [o]);
   if (!o) return null;
   const isAdmin = currentUser?.role === 'admin';
+  const isHelper = currentUser?.role === 'helper';
+  const isVendor = currentUser?.role === 'vendor';
+  const canUpdateStatus = isAdmin || isHelper || isVendor;
 
   async function updateStatus() {
     try { await apiFetch('/api/orders/' + o.id + '/status', { method: 'PATCH', body: JSON.stringify({ status: selStatus }) }, token); showToast('Order status updated!'); onClose(); onRefresh(); }
@@ -1198,11 +1274,11 @@ function ViewOrderModal({ open, onClose, orderId, db, currentUser, token, showTo
         <div><div style={{ fontSize: 20, fontWeight: 700 }}>#{o.id}</div><div style={{ fontSize: 13, color: 'var(--text2)' }}>{o.date}</div></div>
         <span className={`badge ${STATUS_MAP[o.status]?.cls || 'badge-gray'}`}>{STATUS_MAP[o.status]?.label || o.status}</span>
       </div>
-      {isAdmin && (
-        <div style={{ background: 'var(--green-light)', border: '1.5px solid var(--green-mid)', borderRadius: 12, padding: 14, marginBottom: 14 }}>
-          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'var(--green)' }}>🔄 Update Status</div>
+      {canUpdateStatus && (
+        <div style={{ background: 'rgba(46,125,50,0.2)', border: '1.5px solid rgba(76,175,80,0.4)', borderRadius: 12, padding: 14, marginBottom: 14 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: '#81c784' }}>🔄 Update Status</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <select value={selStatus} onChange={e => setSelStatus(e.target.value)} style={{ flex: 1, padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: 10, fontSize: 13, background: 'var(--white)', cursor: 'pointer', outline: 'none', fontFamily: 'Nunito, sans-serif' }}>
+            <select value={selStatus} onChange={e => setSelStatus(e.target.value)} style={{ flex: 1, padding: '9px 12px', border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: 10, fontSize: 13, background: 'rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer', outline: 'none', fontFamily: 'Nunito, sans-serif' }}>
               <option value="processing">⏳ Processing</option>
               <option value="out_for_delivery">🚴 Out for Delivery</option>
               <option value="delivered">✅ Delivered</option>
@@ -1212,24 +1288,182 @@ function ViewOrderModal({ open, onClose, orderId, db, currentUser, token, showTo
           </div>
         </div>
       )}
-      <div style={{ background: 'var(--bg)', borderRadius: 12, padding: 14, marginBottom: 14 }}>
-        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>📦 Items</div>
-        {o.items.map((i, idx) => <div key={idx} className="billing-row"><span>{i.emoji} {i.name} ×{i.qty}</span><span>₹{i.price * i.qty}</span></div>)}
+      <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 12, padding: 14, marginBottom: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'rgba(255,255,255,0.9)' }}>📦 Items</div>
+        {o.items.map((i, idx) => <div key={idx} className="billing-row" style={{ color: 'rgba(255,255,255,0.8)' }}><span>{i.emoji} {i.name} ×{i.qty}</span><span>₹{i.price * i.qty}</span></div>)}
       </div>
-      <div style={{ background: 'var(--bg)', borderRadius: 12, padding: 14, marginBottom: 14 }}>
-        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>💰 Billing</div>
-        <div className="billing-row"><span>Subtotal</span><span>₹{o.subtotal || o.total}</span></div>
-        <div className="billing-row"><span>Delivery</span><span>{(o.delivery || 0) === 0 ? 'Free' : '₹' + (o.delivery || 0)}</span></div>
-        {o.discount > 0 && <div className="billing-row" style={{ color: 'var(--green)' }}><span>Discount</span><span>−₹{o.discount}</span></div>}
-        <div className="billing-row" style={{ fontSize: 16, fontWeight: 800 }}><span>Total</span><span style={{ color: 'var(--green)' }}>₹{o.total}</span></div>
+      <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 12, padding: 14, marginBottom: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'rgba(255,255,255,0.9)' }}>💰 Billing</div>
+        <div className="billing-row" style={{ color: 'rgba(255,255,255,0.8)' }}><span>Subtotal</span><span>₹{o.subtotal || o.total}</span></div>
+        <div className="billing-row" style={{ color: 'rgba(255,255,255,0.8)' }}><span>Delivery</span><span>{(o.delivery || 0) === 0 ? 'Free' : '₹' + (o.delivery || 0)}</span></div>
+        {o.discount > 0 && <div className="billing-row" style={{ color: '#7ecf7e' }}><span>Discount</span><span>−₹{o.discount}</span></div>}
+        <div className="billing-row" style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}><span>Total</span><span style={{ color: '#7ecf7e' }}>₹{o.total}</span></div>
       </div>
-      <div style={{ background: 'var(--green-light)', border: '1.5px solid var(--green)', borderRadius: 12, padding: 14 }}>
-        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: 'var(--green)' }}>📞 Delivery Contact</div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--green)' }}>{o.customerPhone || 'N/A'}</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4 }}>👤 {o.customerName}</div>
-        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>📍 {o.customerAddress}</div>
+      <div style={{ background: 'rgba(46,125,50,0.25)', border: '1.5px solid rgba(76,175,80,0.5)', borderRadius: 12, padding: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#81c784' }}>📞 Delivery Contact</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#7ecf7e' }}>{o.customerPhone || 'N/A'}</div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>👤 {o.customerName}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>📍 {o.customerAddress}</div>
       </div>
     </Modal>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  HELPER PAGES
+// ══════════════════════════════════════════════════════════════════════
+function HelperDashboard({ db, currentUser }) {
+  const allOrders = db.orders || [];
+  const totalOrders = allOrders.length;
+  const delivered = allOrders.filter(o => o.status === 'delivered').length;
+  const processing = allOrders.filter(o => o.status === 'processing').length;
+  const outForDelivery = allOrders.filter(o => o.status === 'out_for_delivery').length;
+  const vendors = db.users.filter(u => u.role === 'vendor' && u.vendorStatus === 'approved');
+
+  return (
+    <>
+      <div className="page-header"><h1>🛵 Helper Dashboard</h1></div>
+      <div className="stats-grid">
+        {[
+          ['🧾', totalOrders, 'Total Orders', 'var(--blue)'],
+          ['⏳', processing, 'Processing', 'var(--orange)'],
+          ['🚴', outForDelivery, 'Out for Delivery', 'var(--purple)'],
+          ['✅', delivered, 'Delivered', 'var(--green)'],
+        ].map(([icon, val, lbl, col]) => (
+          <div key={lbl} className="stat-card"><div className="stat-icon">{icon}</div><div className="stat-value" style={{ color: col }}>{val}</div><div className="stat-label">{lbl}</div></div>
+        ))}
+      </div>
+      <div className="card">
+        <div className="card-title">🏪 Active Vendors ({vendors.length})</div>
+        {!vendors.length ? <div className="empty-state"><div className="es-icon">🏪</div><p>No active vendors yet</p></div> : (
+          <div className="table-responsive">
+            <table className="data-table">
+              <thead><tr><th>Store</th><th>Owner</th><th>Phone</th><th>Location</th><th>Pending Orders</th></tr></thead>
+              <tbody>
+                {vendors.map(v => {
+                  const vendorOrders = allOrders.filter(o => o.vendorId === v.id && o.status === 'processing');
+                  return (
+                    <tr key={v.id}>
+                      <td><strong>{v.storeName || v.name}</strong></td>
+                      <td>{v.name}</td>
+                      <td style={{ fontSize: 12 }}>
+                        <a href={`tel:${v.phone}`} style={{ color: 'var(--green)', fontWeight: 700, textDecoration: 'none' }}>📞 {v.phone || 'N/A'}</a>
+                      </td>
+                      <td>📍 {v.location || 'N/A'}</td>
+                      <td><span className={`badge ${vendorOrders.length > 0 ? 'badge-orange' : 'badge-green'}`}>{vendorOrders.length} pending</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function HelperOrders({ db, token, showToast, onRefresh, onViewOrder }) {
+  const [filterVendor, setFilterVendor] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const vendors = db.users.filter(u => u.role === 'vendor' && u.vendorStatus === 'approved');
+
+  async function updateStatus(orderId, status) {
+    try {
+      await apiFetch('/api/orders/' + orderId + '/status', { method: 'PATCH', body: JSON.stringify({ status }) }, token);
+      showToast('✅ Order status updated');
+      onRefresh();
+    } catch (e) { showToast(e.message || 'Error'); }
+  }
+
+  let orders = db.orders || [];
+  if (filterVendor !== 'all') orders = orders.filter(o => o.vendorId === filterVendor);
+  if (filterStatus !== 'all') orders = orders.filter(o => o.status === filterStatus);
+
+  return (
+    <>
+      <div className="page-header"><h1>📦 All Vendor Orders</h1></div>
+      <div className="card" style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap', padding: '16px 20px', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>Filter:</span>
+        <select className="form-input" style={{ flex: 1, minWidth: 160, margin: 0, padding: '8px 12px' }} value={filterVendor} onChange={e => setFilterVendor(e.target.value)}>
+          <option value="all">All Vendors</option>
+          {vendors.map(v => <option key={v.id} value={v.id}>{v.storeName || v.name}</option>)}
+        </select>
+        <select className="form-input" style={{ flex: 1, minWidth: 160, margin: 0, padding: '8px 12px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <option value="all">All Statuses</option>
+          <option value="processing">⏳ Processing</option>
+          <option value="out_for_delivery">🚴 Out for Delivery</option>
+          <option value="delivered">✅ Delivered</option>
+          <option value="cancelled">❌ Cancelled</option>
+        </select>
+      </div>
+      <div className="card">
+        {!orders.length ? <div className="empty-state"><div className="es-icon">📦</div><p>No orders found</p></div> : orders.map(o => {
+          const vendor = vendors.find(v => v.id === o.vendorId);
+          return (
+            <div key={o.id} className="order-card">
+              <div className="order-header">
+                <span className="order-id">#{o.id}</span>
+                <span className={`badge ${STATUS_MAP[o.status]?.cls || 'badge-gray'}`}>{STATUS_MAP[o.status]?.label || o.status}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+                <span style={{ fontSize: 12, background: 'rgba(245,124,0,0.1)', color: 'var(--orange)', padding: '3px 10px', borderRadius: 20, fontWeight: 700 }}>🏪 {vendor?.storeName || o.vendorName || 'Unknown Vendor'}</span>
+                <a href={`tel:${vendor?.phone}`} style={{ fontSize: 12, background: 'rgba(21,101,192,0.1)', color: 'var(--blue)', padding: '3px 10px', borderRadius: 20, fontWeight: 700, textDecoration: 'none' }}>📞 Vendor: {vendor?.phone || 'N/A'}</a>
+              </div>
+              <div style={{ fontSize: 13, marginBottom: 4 }}>👤 <strong>{o.customerName}</strong></div>
+              <a href={`tel:${o.customerPhone}`} style={{ display: 'block', fontSize: 13, marginBottom: 4, color: 'var(--green)', fontWeight: 700, textDecoration: 'none' }}>📞 Customer: {o.customerPhone || 'N/A'}</a>
+              <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6 }}>📍 {o.customerAddress || 'Address not set'}</div>
+              <div style={{ fontSize: 13, marginBottom: 8 }}>{o.items?.map(i => `${i.emoji} ${i.name} ×${i.qty}`).join(' · ')}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--green)' }}>₹{o.total}</span>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {o.status === 'processing' && <button className="btn-primary" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => updateStatus(o.id, 'out_for_delivery')}>🚴 Out for Delivery</button>}
+                  {o.status === 'out_for_delivery' && <button className="btn-primary" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => updateStatus(o.id, 'delivered')}>✅ Delivered</button>}
+                  <button className="btn-unblock" style={{ padding: '6px 12px', fontSize: 12 }} onClick={() => onViewOrder(o.id)}>View Details</button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function HelperProfile({ currentUser, db, onLogout }) {
+  const totalOrders = db.orders?.length || 0;
+  const delivered = db.orders?.filter(o => o.status === 'delivered').length || 0;
+  const initials = currentUser.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  return (
+    <>
+      <div className="page-header"><h1>My Profile</h1></div>
+      <div className="profile-hero">
+        <div className="profile-avatar-big" style={{ background: 'linear-gradient(135deg, #1565c0, #1976d2)' }}>{initials}</div>
+        <div className="profile-hero-info">
+          <div className="profile-hero-name">{currentUser.name}</div>
+          <div className="profile-hero-sub">{currentUser.email}</div>
+          <div className="profile-hero-tags">
+            <span className="profile-tag" style={{ background: 'rgba(21,101,192,0.1)', color: 'var(--blue)' }}>🛵 Helper</span>
+            {currentUser.phone && <span className="profile-tag">📞 {currentUser.phone}</span>}
+          </div>
+        </div>
+      </div>
+      <div className="profile-stats-row">
+        <div className="profile-stat-box"><div className="profile-stat-val" style={{ color: 'var(--blue)' }}>{totalOrders}</div><div className="profile-stat-lbl">Total Orders</div></div>
+        <div className="profile-stat-box"><div className="profile-stat-val" style={{ color: 'var(--green)' }}>{delivered}</div><div className="profile-stat-lbl">Delivered</div></div>
+        <div className="profile-stat-box"><div className="profile-stat-val" style={{ color: 'var(--orange)' }}>{db.users?.filter(u => u.role === 'vendor' && u.vendorStatus === 'approved').length || 0}</div><div className="profile-stat-lbl">Active Vendors</div></div>
+      </div>
+      <div className="profile-section">
+        <div className="profile-section-title">👤 Personal Information</div>
+        <div className="profile-info-grid">
+          <div className="profile-info-item"><div className="profile-info-label">Full Name</div><div className="profile-info-value">{currentUser.name}</div></div>
+          <div className="profile-info-item"><div className="profile-info-label">Email</div><div className="profile-info-value">{currentUser.email}</div></div>
+          <div className="profile-info-item"><div className="profile-info-label">Phone</div><div className="profile-info-value">{currentUser.phone || 'Not added'}</div></div>
+          <div className="profile-info-item" style={{ gridColumn: '1/-1' }}><div className="profile-info-label">Address</div><div className="profile-info-value">{currentUser.address || 'Not set'}</div></div>
+        </div>
+      </div>
+      <button className="mobile-logout-btn" onClick={onLogout}>🚪 Log Out</button>
+    </>
   );
 }
 
@@ -1252,10 +1486,16 @@ const NAV_CONFIGS = {
     { icon: '📊', label: 'Dashboard', page: 'a-home'     },
     { icon: '👥', label: 'Users',     page: 'a-users'    },
     { icon: '✅', label: 'Vendors',   page: 'a-vendors'  },
+    { icon: '🛵', label: 'Helpers',   page: 'a-helpers'  },
     { icon: '📦', label: 'Products',  page: 'a-products' },
     { icon: '🧾', label: 'Orders',    page: 'a-orders'   },
     { icon: '🚚', label: 'Delivery',  page: 'a-delivery' },
     { icon: '⭐', label: 'Feedback',  page: 'a-feedback' },
+  ],
+  helper: [
+    { icon: '📊', label: 'Dashboard', page: 'h-home'    },
+    { icon: '📦', label: 'Orders',    page: 'h-orders'  },
+    { icon: '👤', label: 'My Profile',page: 'h-profile' },
   ],
 };
 
@@ -1361,10 +1601,14 @@ export default function App() {
       case 'a-home':    return <AdminDashboard {...commonProps}/>;
       case 'a-users':   return <AdminUsers {...commonProps}/>;
       case 'a-vendors': return <VendorApprovals {...commonProps}/>;
+      case 'a-helpers': return <HelperApprovals {...commonProps}/>;
       case 'a-products':return <AdminProducts {...commonProps}/>;
       case 'a-orders':  return <AdminOrders {...commonProps} onViewOrder={id => setViewOrderId(id)}/>;
       case 'a-feedback':return <AdminFeedback {...commonProps}/>;
       case 'a-delivery':return <DeliverySettings {...commonProps}/>;
+      case 'h-home':    return <HelperDashboard {...commonProps}/>;
+      case 'h-orders':  return <HelperOrders {...commonProps} onViewOrder={id => setViewOrderId(id)}/>;
+      case 'h-profile': return <HelperProfile {...commonProps} onLogout={doLogout}/>;
       default: return null;
     }
   }
@@ -1372,7 +1616,7 @@ export default function App() {
   const role = currentUser?.role;
   const navItems = NAV_CONFIGS[role] || [];
   const initials = currentUser ? currentUser.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
-  const avatarCls = `su-avatar${role === 'admin' ? ' admin-av' : role === 'vendor' ? ' vendor-av' : ''}`;
+  const avatarCls = `su-avatar${role === 'admin' ? ' admin-av' : role === 'vendor' ? ' vendor-av' : role === 'helper' ? ' helper-av' : ''}`;
 
   // ── Auth / Pending / Blocked screens
   if (screen === 'auth') return <AuthScreen onLogin={handleLogin} onPending={onPending} onBlocked={onBlocked}/>;
@@ -1382,7 +1626,7 @@ export default function App() {
       <div className="pending-box">
         <div className="pending-icon">⏳</div>
         <h2>Approval Pending</h2>
-        <p>Your vendor account has been submitted for review. The admin will approve or reject your application.</p>
+        <p>Your account has been submitted for review. The admin will approve or reject your application.</p>
         <br/>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>{pendingEmail}</p>
         <button className="pending-logout" onClick={doLogout}>← Back to Login</button>
@@ -1424,11 +1668,11 @@ export default function App() {
           </div>
           <div className="su-info">
             <div className="su-name">{currentUser?.name}</div>
-            <div className="su-role">{role === 'vendor' ? (currentUser?.storeName || 'Vendor') : role?.charAt(0).toUpperCase() + role?.slice(1)}</div>
+            <div className="su-role">{role === 'vendor' ? (currentUser?.storeName || 'Vendor') : role === 'helper' ? '🛵 Helper' : role?.charAt(0).toUpperCase() + role?.slice(1)}</div>
           </div>
         </div>
         <div className={`sidebar-role-badge badge-${role}`}>
-          {role === 'admin' ? 'Admin' : role === 'vendor' ? 'Vendor' : 'Customer'}
+          {role === 'admin' ? 'Admin' : role === 'vendor' ? 'Vendor' : role === 'helper' ? '🛵 Helper' : 'Customer'}
         </div>
         <nav className="sidebar-nav">
           {navItems.map(item => (

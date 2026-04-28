@@ -116,14 +116,22 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5*1024*1024 }, fileFilter: (_req,file,cb) => { if(file.mimetype.startsWith('image/')) cb(null,true); else cb(new Error('Only images allowed')); } });
 
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '20mb' }));
 app.use('/uploads', express.static(UPLOADS_DIR));
 const PUBLIC_DIR = path.join(__dirname, 'public');
 app.use(express.static(PUBLIC_DIR));
+
+// Serve React frontend build
+const FRONTEND_DIST = path.join(__dirname, '../frontend/becho/dist');
+if (require('fs').existsSync(FRONTEND_DIST)) {
+  app.use(express.static(FRONTEND_DIST));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+      res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
+    }
+  });
+}
 app.get('/', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
 
 async function getSettingVal(key) { const row = await Setting.findOne({ key }); return row ? row.value : null; }
@@ -180,7 +188,7 @@ app.post('/api/auth/login', async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user || !bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Invalid email or password' });
     if (user.status === 'blocked') return res.status(403).json({ error: 'blocked' });
-    if (user.role === 'vendor' && user.vendorStatus === 'pending') return res.status(403).json({ error: 'pending' });
+    if ((user.role === 'vendor' || user.role === 'helper') && user.vendorStatus === 'pending') return res.status(403).json({ error: 'pending' });
     res.json({ token: makeToken(user), user: fmtUser(user) });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -189,12 +197,14 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, phone, password, role, address, storeName, location, category } = req.body;
     if (!name || !email || !password || !role) return res.status(400).json({ error: 'Fill all fields' });
-    if (!phone) return res.status(400).json({ error: 'Phone number is required' });
+    if (!['customer', 'vendor', 'helper'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+    if ((role === 'vendor' || role === 'helper') && !phone) return res.status(400).json({ error: 'Phone number is required' });
     if (password.length < 6) return res.status(400).json({ error: 'Password min 6 chars' });
     if (await User.findOne({ email: email.toLowerCase() })) return res.status(409).json({ error: 'Email already registered' });
     if (role === 'vendor' && (!storeName || !location)) return res.status(400).json({ error: 'Store name and location required' });
-    const user = await User.create({ name, email: email.toLowerCase(), phone, password: bcrypt.hashSync(password, 10), role, vendorStatus: role==='vendor'?'pending':null, storeName:storeName||null, location:location||null, category:category||null, address:address||null });
-    if (role === 'vendor') return res.json({ status: 'pending', user: fmtUser(user) });
+    const needsApproval = role === 'vendor' || role === 'helper';
+    const user = await User.create({ name, email: email.toLowerCase(), phone, password: bcrypt.hashSync(password, 10), role, vendorStatus: needsApproval ? 'pending' : null, storeName:storeName||null, location:location||null, category:category||null, address:address||null });
+    if (needsApproval) return res.json({ status: 'pending', user: fmtUser(user) });
     res.json({ token: makeToken(user), user: fmtUser(user) });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -237,7 +247,8 @@ app.put('/api/auth/profile', authMiddleware, async (req, res) => {
 // ── SNAPSHOT ──────────────────────────────────────────────────
 app.get('/api/snapshot', authMiddleware, async (req, res) => {
   try {
-    const [users, products, orders, feedback, delivery, coupons] = await Promise.all([
+    const role = req.user.role;
+    const [allUsers, products, orders, feedback, delivery, coupons] = await Promise.all([
       User.find().then(r => r.map(fmtUser)),
       Product.find({ status: 'active' }).sort({ createdAt: -1 }).then(r => r.map(fmtProduct)),
       Order.find().sort({ createdAt: -1 }).then(r => r.map(fmtOrder)),
@@ -245,7 +256,14 @@ app.get('/api/snapshot', authMiddleware, async (req, res) => {
       getSettingVal('delivery'),
       getSettingVal('coupons'),
     ]);
-    res.json({ users, products, orders, feedback, settings: { ...delivery, coupons: coupons||[] }, version: 7 });
+
+    // Helper only gets vendors list + all orders (no customer private details stripped from orders)
+    // but user list is limited to vendors only (not customer emails/addresses)
+    const usersForRole = (role === 'helper')
+      ? allUsers.filter(u => u.role === 'vendor' || u.role === 'helper')
+      : allUsers;
+
+    res.json({ users: usersForRole, products, orders, feedback, settings: { ...delivery, coupons: coupons||[] }, version: 7 });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -382,7 +400,7 @@ app.post('/api/orders', authMiddleware, requireRole('customer','admin'), async (
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.patch('/api/orders/:id/status', authMiddleware, requireRole('vendor','admin'), async (req, res) => {
+app.patch('/api/orders/:id/status', authMiddleware, requireRole('vendor','admin','helper'), async (req, res) => {
   try {
     const { status } = req.body;
     if (!['processing','out_for_delivery','delivered','cancelled'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
