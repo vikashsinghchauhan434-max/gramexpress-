@@ -132,7 +132,7 @@ if (require('fs').existsSync(FRONTEND_DIST)) {
     }
   });
 }
-app.get('/', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'index.html')));
+app.get('/', (_req, res) => res.json({ status: 'ok', message: 'GramExpress API is running' }));
 
 async function getSettingVal(key) { const row = await Setting.findOne({ key }); return row ? row.value : null; }
 async function setSettingVal(key, val) { await Setting.findOneAndUpdate({ key }, { value: val }, { upsert: true }); }
