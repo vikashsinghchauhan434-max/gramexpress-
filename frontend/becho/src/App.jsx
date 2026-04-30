@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css'
 
 // ── Constants ──────────────────────────────────────────────────────────
-const API = '';   // same-origin proxy; set to your backend URL if deploying separately
+const API = '';
 const CATEGORIES = {
   Vegetables: { icon: '🥬', subcategories: ['Leafy Greens','Root Vegetables','Tomatoes & Peppers','Onion & Garlic','Gourds','Beans & Peas','Exotic Vegetables'] },
   Fruits:     { icon: '🍎', subcategories: ['Citrus Fruits','Tropical Fruits','Berries','Apples & Pears','Melons','Dry Fruits','Seasonal Fruits'] },
@@ -681,12 +681,6 @@ function AdminUsers({ db, token, showToast, onRefresh }) {
     catch (e) { showToast(e.message || 'Error'); }
   }
 
-  function getRoleBadge(u) {
-    if (u.role === 'vendor') return <><span className="badge badge-orange">🏪 Vendor</span><br/><span className={`badge ${u.vendorStatus === 'approved' ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 4 }}>{u.vendorStatus}</span></>;
-    if (u.role === 'helper') return <><span className="badge badge-blue">🛵 Helper</span><br/><span className={`badge ${u.vendorStatus === 'approved' ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 4 }}>{u.vendorStatus}</span></>;
-    return <span className="badge badge-green">🛒 Customer</span>;
-  }
-
   return (
     <>
       <div className="page-header"><h1>User Management</h1></div>
@@ -702,7 +696,11 @@ function AdminUsers({ db, token, showToast, onRefresh }) {
                   <tr key={u.id}>
                     <td><strong>{u.name}</strong>{u.storeName && <><br/><span style={{ fontSize: 11, color: 'var(--text3)' }}>🏪 {u.storeName}</span></>}</td>
                     <td style={{ fontSize: 12 }}>📧 {u.email}<br/>📞 {u.phone || 'N/A'}</td>
-                    <td>{getRoleBadge(u)}</td>
+                    <td>
+                      {u.role === 'vendor' && <><span className="badge badge-orange">🏪 Vendor</span><br/><span className={`badge ${u.vendorStatus === 'approved' ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 4 }}>{u.vendorStatus}</span></>}
+                      {u.role === 'helper' && <><span className="badge badge-blue">🛵 Helper</span><br/><span className={`badge ${u.vendorStatus === 'approved' ? 'badge-green' : 'badge-gray'}`} style={{ marginTop: 4 }}>{u.vendorStatus}</span></>}
+                      {u.role === 'customer' && <span className="badge badge-green">🛒 Customer</span>}
+                    </td>
                     <td><span className={`badge ${u.status === 'blocked' ? 'badge-red' : 'badge-green'}`}>{u.status === 'blocked' ? '🚫 Blocked' : '✅ Active'}</span></td>
                     <td>
                       {u.status === 'blocked' ? <button className="btn-unblock" onClick={() => changeStatus(u.id, 'active')}>Unblock</button> : <button className="btn-block" onClick={() => changeStatus(u.id, 'blocked')}>Block</button>}
@@ -768,62 +766,6 @@ function VendorApprovals({ db, token, showToast, onRefresh }) {
             </table>
           </div>
         ) : <div className="empty-state" style={{ padding: 24 }}><p>No approved vendors</p></div>}
-      </div>
-    </>
-  );
-}
-
-function HelperApprovals({ db, token, showToast, onRefresh }) {
-  const pending = db.users.filter(u => u.role === 'helper' && u.vendorStatus === 'pending');
-  const approved = db.users.filter(u => u.role === 'helper' && u.vendorStatus === 'approved');
-
-  async function changeHelperStatus(id, vendorStatus) {
-    if (vendorStatus === 'rejected' && !window.confirm('Reject and delete this helper?')) return;
-    try {
-      await apiFetch('/api/users/' + id + '/vendor-status', { method: 'PATCH', body: JSON.stringify({ vendorStatus }) }, token);
-      showToast(vendorStatus === 'approved' ? '✅ Helper approved!' : '❌ Helper rejected');
-      onRefresh();
-    } catch (e) { showToast(e.message || 'Error'); }
-  }
-
-  return (
-    <>
-      <div className="page-header"><h1>🛵 Helper Approvals</h1></div>
-      <div className="card">
-        <div className="card-title">Pending Helpers <span className="badge badge-blue">{pending.length} pending</span></div>
-        {pending.length ? pending.map(h => (
-          <div key={h.id} className="pending-vendor-card">
-            <div className="vendor-info">
-              <h4>🛵 {h.name}</h4>
-              <p>👤 {h.name} · 📧 {h.email} · 📞 {h.phone}</p>
-              <p>📍 {h.address || 'Address not provided'}</p>
-            </div>
-            <div className="action-btns">
-              <button className="btn-approve" onClick={() => changeHelperStatus(h.id, 'approved')}>✅ Approve</button>
-              <button className="btn-danger" onClick={() => changeHelperStatus(h.id, 'rejected')}>❌ Reject</button>
-            </div>
-          </div>
-        )) : <div className="empty-state" style={{ padding: 24 }}><div className="es-icon">✅</div><p>No pending helper approvals</p></div>}
-      </div>
-      <div className="card" style={{ marginTop: 20 }}>
-        <div className="card-title">Approved Helpers</div>
-        {approved.length ? (
-          <div className="table-responsive">
-            <table className="data-table">
-              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th></tr></thead>
-              <tbody>
-                {approved.map(h => (
-                  <tr key={h.id}>
-                    <td><strong>{h.name}</strong></td>
-                    <td style={{ fontSize: 12 }}>📧 {h.email}</td>
-                    <td style={{ fontSize: 12 }}>📞 {h.phone || 'N/A'}</td>
-                    <td style={{ fontSize: 12 }}>📍 {h.address || 'N/A'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : <div className="empty-state" style={{ padding: 24 }}><p>No approved helpers</p></div>}
       </div>
     </>
   );
@@ -1309,26 +1251,81 @@ function ViewOrderModal({ open, onClose, orderId, db, currentUser, token, showTo
   );
 }
 
+
+// ══════════════════════════════════════════════════════════════════════
+//  HELPER APPROVALS (Admin page)
+// ══════════════════════════════════════════════════════════════════════
+function HelperApprovals({ db, token, showToast, onRefresh }) {
+  const pending = db.users.filter(u => u.role === 'helper' && u.vendorStatus === 'pending');
+  const approved = db.users.filter(u => u.role === 'helper' && u.vendorStatus === 'approved');
+
+  async function changeHelperStatus(id, vendorStatus) {
+    if (vendorStatus === 'rejected' && !window.confirm('Reject and delete this helper?')) return;
+    try {
+      await apiFetch('/api/users/' + id + '/vendor-status', { method: 'PATCH', body: JSON.stringify({ vendorStatus }) }, token);
+      showToast(vendorStatus === 'approved' ? '✅ Helper approved!' : '❌ Helper rejected');
+      onRefresh();
+    } catch (e) { showToast(e.message || 'Error'); }
+  }
+
+  return (
+    <>
+      <div className="page-header"><h1>🛵 Helper Approvals</h1></div>
+      <div className="card">
+        <div className="card-title">Pending Helpers <span className="badge badge-blue">{pending.length} pending</span></div>
+        {pending.length ? pending.map(h => (
+          <div key={h.id} className="pending-vendor-card">
+            <div className="vendor-info">
+              <h4>🛵 {h.name}</h4>
+              <p>📧 {h.email} · 📞 {h.phone || 'N/A'}</p>
+              <p>📍 {h.address || 'Address not provided'}</p>
+            </div>
+            <div className="action-btns">
+              <button className="btn-approve" onClick={() => changeHelperStatus(h.id, 'approved')}>✅ Approve</button>
+              <button className="btn-danger" onClick={() => changeHelperStatus(h.id, 'rejected')}>❌ Reject</button>
+            </div>
+          </div>
+        )) : <div className="empty-state" style={{ padding: 24 }}><div className="es-icon">✅</div><p>No pending helper approvals</p></div>}
+      </div>
+      <div className="card" style={{ marginTop: 20 }}>
+        <div className="card-title">Approved Helpers ({approved.length})</div>
+        {approved.length ? (
+          <div className="table-responsive">
+            <table className="data-table">
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Address</th></tr></thead>
+              <tbody>
+                {approved.map(h => (
+                  <tr key={h.id}>
+                    <td><strong>{h.name}</strong></td>
+                    <td style={{ fontSize: 12 }}>📧 {h.email}</td>
+                    <td style={{ fontSize: 12 }}>📞 {h.phone || 'N/A'}</td>
+                    <td style={{ fontSize: 12 }}>📍 {h.address || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : <div className="empty-state" style={{ padding: 24 }}><p>No approved helpers yet</p></div>}
+      </div>
+    </>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════
 //  HELPER PAGES
 // ══════════════════════════════════════════════════════════════════════
-function HelperDashboard({ db, currentUser }) {
+function HelperDashboard({ db }) {
   const allOrders = db.orders || [];
-  const totalOrders = allOrders.length;
-  const delivered = allOrders.filter(o => o.status === 'delivered').length;
-  const processing = allOrders.filter(o => o.status === 'processing').length;
-  const outForDelivery = allOrders.filter(o => o.status === 'out_for_delivery').length;
   const vendors = db.users.filter(u => u.role === 'vendor' && u.vendorStatus === 'approved');
-
   return (
     <>
       <div className="page-header"><h1>🛵 Helper Dashboard</h1></div>
       <div className="stats-grid">
         {[
-          ['🧾', totalOrders, 'Total Orders', 'var(--blue)'],
-          ['⏳', processing, 'Processing', 'var(--orange)'],
-          ['🚴', outForDelivery, 'Out for Delivery', 'var(--purple)'],
-          ['✅', delivered, 'Delivered', 'var(--green)'],
+          ['🧾', allOrders.length, 'Total Orders', 'var(--blue)'],
+          ['⏳', allOrders.filter(o => o.status === 'processing').length, 'Processing', 'var(--orange)'],
+          ['🚴', allOrders.filter(o => o.status === 'out_for_delivery').length, 'Out for Delivery', 'var(--purple)'],
+          ['✅', allOrders.filter(o => o.status === 'delivered').length, 'Delivered', 'var(--green)'],
         ].map(([icon, val, lbl, col]) => (
           <div key={lbl} className="stat-card"><div className="stat-icon">{icon}</div><div className="stat-value" style={{ color: col }}>{val}</div><div className="stat-label">{lbl}</div></div>
         ))}
@@ -1341,16 +1338,14 @@ function HelperDashboard({ db, currentUser }) {
               <thead><tr><th>Store</th><th>Owner</th><th>Phone</th><th>Location</th><th>Pending Orders</th></tr></thead>
               <tbody>
                 {vendors.map(v => {
-                  const vendorOrders = allOrders.filter(o => o.vendorId === v.id && o.status === 'processing');
+                  const pendingCount = allOrders.filter(o => o.vendorId === v.id && o.status === 'processing').length;
                   return (
                     <tr key={v.id}>
                       <td><strong>{v.storeName || v.name}</strong></td>
                       <td>{v.name}</td>
-                      <td style={{ fontSize: 12 }}>
-                        <a href={`tel:${v.phone}`} style={{ color: 'var(--green)', fontWeight: 700, textDecoration: 'none' }}>📞 {v.phone || 'N/A'}</a>
-                      </td>
+                      <td><a href={`tel:${v.phone}`} style={{ color: 'var(--green)', fontWeight: 700, textDecoration: 'none' }}>📞 {v.phone || 'N/A'}</a></td>
                       <td>📍 {v.location || 'N/A'}</td>
-                      <td><span className={`badge ${vendorOrders.length > 0 ? 'badge-orange' : 'badge-green'}`}>{vendorOrders.length} pending</span></td>
+                      <td><span className={`badge ${pendingCount > 0 ? 'badge-orange' : 'badge-green'}`}>{pendingCount} pending</span></td>
                     </tr>
                   );
                 })}
@@ -1438,12 +1433,12 @@ function HelperProfile({ currentUser, db, onLogout }) {
     <>
       <div className="page-header"><h1>My Profile</h1></div>
       <div className="profile-hero">
-        <div className="profile-avatar-big" style={{ background: 'linear-gradient(135deg, #1565c0, #1976d2)' }}>{initials}</div>
+        <div className="profile-avatar-big helper-av">{initials}</div>
         <div className="profile-hero-info">
           <div className="profile-hero-name">{currentUser.name}</div>
           <div className="profile-hero-sub">{currentUser.email}</div>
           <div className="profile-hero-tags">
-            <span className="profile-tag" style={{ background: 'rgba(21,101,192,0.1)', color: 'var(--blue)' }}>🛵 Helper</span>
+            <span className="profile-tag" style={{ background: 'rgba(21,101,192,0.15)', color: 'var(--blue)' }}>🛵 Helper</span>
             {currentUser.phone && <span className="profile-tag">📞 {currentUser.phone}</span>}
           </div>
         </div>

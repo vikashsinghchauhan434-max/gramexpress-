@@ -120,18 +120,9 @@ app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '20mb' }));
 app.use('/uploads', express.static(UPLOADS_DIR));
 const PUBLIC_DIR = path.join(__dirname, 'public');
-app.use(express.static(PUBLIC_DIR));
 
 // Serve React frontend build
 const FRONTEND_DIST = path.join(__dirname, '../frontend/becho/dist');
-if (require('fs').existsSync(FRONTEND_DIST)) {
-  app.use(express.static(FRONTEND_DIST));
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
-      res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
-    }
-  });
-}
 app.get('/', (_req, res) => res.json({ status: 'ok', message: 'GramExpress API is running' }));
 
 async function getSettingVal(key) { const row = await Setting.findOne({ key }); return row ? row.value : null; }
@@ -197,11 +188,12 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, phone, password, role, address, storeName, location, category } = req.body;
     if (!name || !email || !password || !role) return res.status(400).json({ error: 'Fill all fields' });
-    if (!['customer', 'vendor', 'helper'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
-    if ((role === 'vendor' || role === 'helper') && !phone) return res.status(400).json({ error: 'Phone number is required' });
+    if (!phone) return res.status(400).json({ error: 'Phone number is required' });
     if (password.length < 6) return res.status(400).json({ error: 'Password min 6 chars' });
     if (await User.findOne({ email: email.toLowerCase() })) return res.status(409).json({ error: 'Email already registered' });
+    if (!['customer','vendor','helper'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
     if (role === 'vendor' && (!storeName || !location)) return res.status(400).json({ error: 'Store name and location required' });
+    if ((role === 'vendor' || role === 'helper') && !phone) return res.status(400).json({ error: 'Phone number is required' });
     const needsApproval = role === 'vendor' || role === 'helper';
     const user = await User.create({ name, email: email.toLowerCase(), phone, password: bcrypt.hashSync(password, 10), role, vendorStatus: needsApproval ? 'pending' : null, storeName:storeName||null, location:location||null, category:category||null, address:address||null });
     if (needsApproval) return res.json({ status: 'pending', user: fmtUser(user) });
@@ -256,14 +248,8 @@ app.get('/api/snapshot', authMiddleware, async (req, res) => {
       getSettingVal('delivery'),
       getSettingVal('coupons'),
     ]);
-
-    // Helper only gets vendors list + all orders (no customer private details stripped from orders)
-    // but user list is limited to vendors only (not customer emails/addresses)
-    const usersForRole = (role === 'helper')
-      ? allUsers.filter(u => u.role === 'vendor' || u.role === 'helper')
-      : allUsers;
-
-    res.json({ users: usersForRole, products, orders, feedback, settings: { ...delivery, coupons: coupons||[] }, version: 7 });
+    const users = role === 'helper' ? allUsers.filter(u => u.role === 'vendor' || u.role === 'helper') : allUsers;
+    res.json({ users, products, orders, feedback, settings: { ...delivery, coupons: coupons||[] }, version: 7 });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

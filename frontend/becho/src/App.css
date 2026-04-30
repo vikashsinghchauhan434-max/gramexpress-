@@ -616,26 +616,6 @@ body {
   color: #fff;
 }
 
-/* Fix white backgrounds inside dark modals */
-.modal .order-card,
-.modal [style*="background: var(--bg)"],
-.modal [style*="background:var(--bg)"],
-.modal [style*="background: var(--white)"],
-.modal [style*="background:var(--white)"] {
-  background: rgba(255,255,255,0.07) !important;
-  color: #fff !important;
-}
-
-.modal-inner-section {
-  background: rgba(255,255,255,0.07) !important;
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
-.modal-inner-section .billing-row { color: rgba(255,255,255,0.85); }
-.modal-inner-section .billing-row span { color: rgba(255,255,255,0.85); }
-
 .modal-title {
   display: flex;
   justify-content: space-between;
