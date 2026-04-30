@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css'
 
 // ── Constants ──────────────────────────────────────────────────────────
-const API = '';
+const API = import.meta.env.VITE_API_URL || '';
 const CATEGORIES = {
   Vegetables: { icon: '🥬', subcategories: ['Leafy Greens','Root Vegetables','Tomatoes & Peppers','Onion & Garlic','Gourds','Beans & Peas','Exotic Vegetables'] },
   Fruits:     { icon: '🍎', subcategories: ['Citrus Fruits','Tropical Fruits','Berries','Apples & Pears','Melons','Dry Fruits','Seasonal Fruits'] },
